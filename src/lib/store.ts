@@ -191,6 +191,23 @@ const hansalProduct: StoreProduct = {
   createdAt: '2026-10-04T00:00:00.000Z',
   image: 'https://images.unsplash.com/photo-1556228720-195a672e8a03?w=500',
 }
+const drKidsProduct: StoreProduct = {
+  id: 'p-dr-kids-zinc-300',
+  name: 'شربت زینک دکتر کیدز ۳۰۰ میلی‌لیتر | Dr. Kids Zinc Liquid Supplement',
+  sku: 'DK-Zn300',
+  category: 'دارو و مکمل',
+  unit: 'عدد',
+  packQty: 'بطری ۳۰۰ میلی‌لیتری',
+  marketPrice: 185000,
+  ourPrice: 138750,
+  stock: 50,
+  featured: false,
+  active: true,
+  desc: 'مکمل مایع تقویتی حاوی روی ویژه کودکان با طعم پرتقال، برای تقویت ایمنی بدن و رشد. مطابق دستور پزشک یا داروساز مصرف شود.',
+  tags: ['زینک', 'کودکان', 'مکمل غذایی', 'تقویت ایمنی'],
+  createdAt: '2026-10-04T00:00:00.000Z',
+  image: 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=600',
+}
 const defaultContent: SiteContent = {
   storeName: 'Healthcare',
   slogan: 'فروشگاه آنلاین محصولات مراقبت از پوست، آرایشی و مکمل',
@@ -260,6 +277,7 @@ function persistStore(partial: StoredStoreData) {
 const stored = readStored()
 const initialProducts = (stored.products?.length ? stored.products : defaultProducts).map((p) => ({ ...p, active: p.active ?? true, createdAt: p.createdAt || new Date().toISOString() }))
 if (!initialProducts.some((p) => p.id === hansalProduct.id)) initialProducts.push(hansalProduct)
+if (!initialProducts.some((p) => p.id === drKidsProduct.id)) initialProducts.push(drKidsProduct)
 const initialCategories = (stored.categories?.length ? stored.categories : defaultCategories).map((c) => ({ ...c, active: c.active ?? true }))
 if (!initialCategories.some((c) => c.slug === hansalCategory.slug)) initialCategories.push(hansalCategory)
 if (typeof window !== 'undefined') persistStore({ products: initialProducts, categories: initialCategories })
