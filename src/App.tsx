@@ -28,6 +28,7 @@ import SchoolProfile from './pages/school/Profile'
 import Support from './pages/school/Support'
 import AdminDashboard from './pages/admin/Dashboard'
 import AdminProducts from './pages/admin/Products'
+import AiAddProduct from './pages/admin/AiAddProduct'
 import AdminProductEdit from './pages/admin/ProductEdit'
 import AdminCategories from './pages/admin/Categories'
 import AdminBundles from './pages/admin/Bundles'
@@ -97,6 +98,7 @@ export default function App() {
             <Route path="appearance" element={<AdminAppearance />} />
             <Route path="products" element={<AdminProducts />} />
             <Route path="products/new" element={<AdminProductEdit />} />
+            <Route path="ai-add" element={<AiAddProduct />} />
             <Route path="products/:id" element={<AdminProductEdit />} />
             <Route path="categories" element={<AdminCategories />} />
             <Route path="bundles" element={<AdminBundles />} />
