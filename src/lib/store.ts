@@ -208,6 +208,23 @@ const drKidsProduct: StoreProduct = {
   createdAt: '2026-10-04T00:00:00.000Z',
   image: 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=600',
 }
+const umbrellaProduct: StoreProduct = {
+  id: 'p-umbrella-energy-fresh',
+  name: 'مام استیکی اومبرلا انرژی فرش | Umbrella Energy + Fresh Magnesium Hydroxide Deodorant',
+  sku: 'UM-ENF-STK',
+  category: 'بهداشتی',
+  unit: 'عدد',
+  packQty: 'استیک ۵۰ گرمی',
+  marketPrice: 120000,
+  ourPrice: 84000,
+  stock: 100,
+  featured: false,
+  active: true,
+  desc: 'دیودورانت استیکی با فرمول منیزیم هیدروکساید، کره شیا و ویتامین E برای تازگی و انرژی تمام روز.',
+  tags: ['دیودورانت', 'منیزیم هیدروکساید', 'بدون آلومینیوم', 'پوست حساس'],
+  createdAt: '2026-10-04T00:00:00.000Z',
+  image: 'https://images.unsplash.com/photo-1556228720-195a672e8a03?w=600',
+}
 const defaultContent: SiteContent = {
   storeName: 'Healthcare',
   slogan: 'فروشگاه آنلاین محصولات مراقبت از پوست، آرایشی و مکمل',
@@ -278,6 +295,7 @@ const stored = readStored()
 const initialProducts = (stored.products?.length ? stored.products : defaultProducts).map((p) => ({ ...p, active: p.active ?? true, createdAt: p.createdAt || new Date().toISOString() }))
 if (!initialProducts.some((p) => p.id === hansalProduct.id)) initialProducts.push(hansalProduct)
 if (!initialProducts.some((p) => p.id === drKidsProduct.id)) initialProducts.push(drKidsProduct)
+if (!initialProducts.some((p) => p.id === umbrellaProduct.id)) initialProducts.push(umbrellaProduct)
 const initialCategories = (stored.categories?.length ? stored.categories : defaultCategories).map((c) => ({ ...c, active: c.active ?? true }))
 if (!initialCategories.some((c) => c.slug === hansalCategory.slug)) initialCategories.push(hansalCategory)
 if (typeof window !== 'undefined') persistStore({ products: initialProducts, categories: initialCategories })
