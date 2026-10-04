@@ -173,6 +173,24 @@ const defaultProducts: StoreProduct[] = [
   { id: 'p8', name: 'ماسک صورت هیدروژل آلوئه‌ورا', sku: 'Msk-Alo', category: 'مراقبت از پوست', unit: 'بسته', packQty: '۵ عدد', marketPrice: 200000, ourPrice: 110000, stock: 80, featured: false, active: true, desc: 'ماسک هیدروژل آبرسان با عصاره آلوئه‌ورا', tags: ['ماسک', 'آبرسان'], createdAt: '2026-01-08T00:00:00.000Z' },
 ]
 
+const hansalCategory: StoreCategory = { id: 'cat-supplements', name: 'مکمل‌های غذایی', slug: 'supplements', icon: '💊', order: 5, active: true }
+const hansalProduct: StoreProduct = {
+  id: 'p-hansal-vitamin-c',
+  name: 'قرص جوشان ویتامین C هانسال',
+  sku: 'HC-HANSAL-VC',
+  category: 'مکمل‌های غذایی',
+  unit: 'عدد',
+  packQty: 'قرص جوشان',
+  marketPrice: 175000,
+  ourPrice: 175000,
+  stock: 0,
+  featured: false,
+  active: true,
+  desc: 'مکمل خوراکی حاوی ویتامین C برای کمک به تأمین نیاز روزانه این ویتامین. قرص را طبق دستور بسته‌بندی در آب حل کنید و بنوشید.',
+  tags: ['ویتامین C', 'مکمل غذایی'],
+  createdAt: '2026-10-04T00:00:00.000Z',
+  image: 'https://images.unsplash.com/photo-1556228720-195a672e8a03?w=500',
+}
 const defaultContent: SiteContent = {
   storeName: 'Healthcare',
   slogan: 'فروشگاه آنلاین محصولات مراقبت از پوست، آرایشی و مکمل',
@@ -240,8 +258,10 @@ function persistStore(partial: StoredStoreData) {
 }
 
 const stored = readStored()
-const initialProducts = stored.products?.length ? stored.products.map((p) => ({ ...p, active: p.active ?? true, createdAt: p.createdAt || new Date().toISOString() })) : defaultProducts
-const initialCategories = stored.categories?.length ? stored.categories.map((c) => ({ ...c, active: c.active ?? true })) : defaultCategories
+const initialProducts = (stored.products?.length ? stored.products : defaultProducts).map((p) => ({ ...p, active: p.active ?? true, createdAt: p.createdAt || new Date().toISOString() }))
+if (!initialProducts.some((p) => p.id === hansalProduct.id)) initialProducts.push(hansalProduct)
+const initialCategories = (stored.categories?.length ? stored.categories : defaultCategories).map((c) => ({ ...c, active: c.active ?? true }))
+if (!initialCategories.some((c) => c.slug === hansalCategory.slug)) initialCategories.push(hansalCategory)
 if (typeof window !== 'undefined') persistStore({ products: initialProducts, categories: initialCategories })
 
 export const useStore = create<StoreState>((set, get) => ({
