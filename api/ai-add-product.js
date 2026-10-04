@@ -1,3 +1,4 @@
+const { createClient } = require('@supabase/supabase-js')
 const categories = ['skincare', 'sunscreen', 'face-makeup', 'eye-lip-makeup', 'haircare', 'bodycare', 'personal-hygiene', 'fragrance']
 const fallbackImages = {
   skincare: 'https://images.unsplash.com/photo-1556228578-0d85b1a4d571?auto=format&fit=crop&w=900&q=80',
@@ -11,14 +12,13 @@ const fallbackImages = {
 }
 function json(res, status, body) { res.status(status).setHeader('Content-Type', 'application/json').send(JSON.stringify(body)) }
 function slugify(value) { return String(value).trim().toLowerCase().replace(/[^\p{L}\p{N}]+/gu, '-').replace(/^-+|-+$/g, '') || `product-${Date.now()}` }
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   if (req.method !== 'POST') return json(res, 405, { error: 'Method not allowed' })
   if (!process.env.AI_ADMIN_SECRET || !process.env.OPENAI_API_KEY || !process.env.SUPABASE_SERVICE_ROLE_KEY) return json(res, 503, { error: 'AI service is not configured in Vercel.' })
   if (req.headers['x-admin-secret'] !== process.env.AI_ADMIN_SECRET) return json(res, 401, { error: 'کلید دسترسی AI نامعتبر است' })
   const productName = typeof req.body?.productName === 'string' ? req.body.productName.trim() : ''
   if (productName.length < 2 || productName.length > 160) return json(res, 400, { error: 'نام محصول باید بین ۲ تا ۱۶۰ کاراکتر باشد' })
   try {
-    const { createClient } = await import('@supabase/supabase-js')
     const aiResponse = await fetch('https://api.openai.com/v1/chat/completions', { method: 'POST', headers: { Authorization: `Bearer ${process.env.OPENAI_API_KEY}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ model: process.env.OPENAI_MODEL || 'gpt-4o-mini', temperature: 0.35, response_format: { type: 'json_object' }, messages: [{ role: 'system', content: 'برای فروشگاه Healthcare محتوای دقیق و محتاطانه فارسی برای محصولات مراقبت پوست، آرایشی و بهداشتی تولید کن. ادعای درمان پزشکی نساز. فقط JSON معتبر برگردان.' }, { role: 'user', content: `برای محصول «${productName}» فقط JSON با کلیدهای name, slug, short_desc, long_desc, brand, category_slug, pack_size, market_price, our_price, cost_price, stock_qty, is_featured, is_hygiene, suitable_for, specs, image_url تولید کن. category_slug باید یکی از این‌ها باشد: ${categories.join(', ')}. عنوان، نقد علمی، ترکیبات مؤثر، نحوه مصرف، هشدار مصرف و قیمت تقریبی را در long_desc و specs فارسی بنویس. our_price نباید از market_price بیشتر باشد. اگر تصویر مطمئن نداری image_url را خالی بگذار.` }] }) })
     const aiPayload = await aiResponse.json()
     if (!aiResponse.ok) throw new Error(aiPayload.error?.message || 'AI request failed')
