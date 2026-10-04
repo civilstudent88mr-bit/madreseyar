@@ -65,7 +65,7 @@ export default function Login() {
       return
     }
     toast('success', 'خوش آمدید')
-    const data = JSON.parse(localStorage.getItem('dermabazar-v1') || '{}')
+    const data = JSON.parse(localStorage.getItem('healthcare-v1') || '{}')
     const role = data.session?.role
     navigate(role === 'admin' ? '/admin' : '/app')
   }
@@ -107,7 +107,7 @@ export default function Login() {
       return
     }
     toast('success', 'خوش آمدید')
-    const data = JSON.parse(localStorage.getItem('dermabazar-v1') || '{}')
+    const data = JSON.parse(localStorage.getItem('healthcare-v1') || '{}')
     const role = data.session?.role
     navigate(role === 'admin' ? '/admin' : '/app')
   }
@@ -120,7 +120,7 @@ export default function Login() {
             <Package className="w-8 h-8 text-white" />
           </div>
           <h1 className="text-2xl font-extrabold text-gray-800">ورود به حساب</h1>
-          <p className="text-gray-500 text-sm mt-1">درمابازار - مراقبت از پوست و آرایشی</p>
+          <p className="text-gray-500 text-sm mt-1">Healthcare - مراقبت از پوست و آرایشی</p>
         </div>
 
         {/* Tabs */}

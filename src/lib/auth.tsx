@@ -52,7 +52,7 @@ const AuthContext = createContext<AuthState>({
   signOut: () => {},
 })
 
-const STORAGE_KEY = 'dermabazar-v1'
+const STORAGE_KEY = 'healthcare-v1'
 
 interface StoredData {
   users: AppUser[]

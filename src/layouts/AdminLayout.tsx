@@ -92,7 +92,7 @@ export default function AdminLayout() {
             <button onClick={() => setOpen(true)} className="btn-ghost p-2">
               <Menu className="w-5 h-5" />
             </button>
-            <span className="font-bold text-primary-800">پنل مدیریت درمابازار</span>
+            <span className="font-bold text-primary-800">پنل مدیریت Healthcare</span>
             <div className="w-9" />
           </div>
         </header>

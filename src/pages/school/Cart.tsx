@@ -83,7 +83,7 @@ export default function Cart() {
               <span className="text-gray-400 line-through">{formatTomanShort(marketTotal)} ت</span>
             </div>
             <div className="flex justify-between text-sm">
-              <span className="text-gray-700 font-medium">قیمت درمابازار</span>
+              <span className="text-gray-700 font-medium">قیمت Healthcare</span>
               <span className="font-bold text-primary-700">{formatTomanShort(subtotal)} ت</span>
             </div>
             <div className="flex justify-between bg-success-50 rounded-xl px-3 py-2.5">

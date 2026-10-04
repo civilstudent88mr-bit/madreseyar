@@ -14,7 +14,7 @@ export default function HowItWorks() {
     <div className="max-w-4xl mx-auto px-4 py-6">
       <Breadcrumbs items={[{ label: 'خانه', to: '/' }, { label: 'چگونه کار می‌کند' }]} />
       <h1 className="text-2xl font-extrabold text-gray-800 mb-2">چگونه کار می‌کند؟</h1>
-      <p className="text-gray-500 mb-8">درمابازار راه ساده و شفافی برای خرید محصولات مراقبت از پوست و آرایشی دارد</p>
+      <p className="text-gray-500 mb-8">Healthcare راه ساده و شفافی برای خرید محصولات مراقبت از پوست و آرایشی دارد</p>
 
       <div className="space-y-4">
         {steps.map((s, i) => (

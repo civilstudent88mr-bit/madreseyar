@@ -23,7 +23,7 @@ export default function Contact() {
           {[
             { icon: Phone, title: 'تلفن تماس', value: '۰۲۱-۹۱۰۰۰۰۰۰' },
             { icon: MessageCircle, title: 'واتساپ', value: '۰۹۱۲۰۰۰۰۰۰۰' },
-            { icon: Mail, title: 'ایمیل', value: 'info@dermabazar.ir' },
+            { icon: Mail, title: 'ایمیل', value: 'info@healthcare.ir' },
             { icon: MapPin, title: 'آدرس', value: 'تهران، خیابان ولیعصر، پلاک ۱۲۰' },
           ].map((c, i) => (
             <div key={i} className="card p-4 flex items-center gap-4">

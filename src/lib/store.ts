@@ -174,11 +174,11 @@ const defaultProducts: StoreProduct[] = [
 ]
 
 const defaultContent: SiteContent = {
-  storeName: 'درمابازار',
+  storeName: 'Healthcare',
   slogan: 'فروشگاه آنلاین محصولات مراقبت از پوست، آرایشی و مکمل',
   heroTitle: 'خرید آنلاین محصولات مراقبت از پوست',
   heroSubtitle: 'و آرایشی و مکمل با قیمت مناسب',
-  heroText: 'درمابازار منبع مطمئن تأمین محصولات مراقبت از پوست، آرایشی، بهداشتی و مکمل است. محصولات اصل را با قیمت مناسب کشف کنید و سفارش خود را مستقیم ثبت کنید.',
+  heroText: 'Healthcare منبع مطمئن تأمین محصولات مراقبت از پوست، آرایشی، بهداشتی و مکمل است. محصولات اصل را با قیمت مناسب کشف کنید و سفارش خود را مستقیم ثبت کنید.',
   heroBadgeShow: true,
   heroBadgeText: '۲۰ تا ۴۰٪ ارزان‌تر از بازار',
   heroButton1Text: 'مشاهده محصولات',
@@ -208,7 +208,7 @@ export const defaultAppearance: AppearanceSettings = {
 }
 
 const defaultSettings: AppSettings = {
-  storeName: 'درمابازار', slogan: 'فروشگاه آنلاین محصولات مراقبت از پوست، آرایشی و مکمل', supportPhone: '021-91000000', cities: 'تهران، کرج، اصفهان، شیراز، مشهد، تبریز، اهواز، رشت', minOrderAmount: 200000, defaultDiscountPercent: 30, showMarketPrice: true, allowSchoolSubmissions: true, deliverySlots: ['صبح (۸-۱۲)', 'ظهر (۱۲-۱۶)'], priceDisclaimer: 'قیمت‌ها تقریبی است و ممکن است تغییر کند.',
+  storeName: 'Healthcare', slogan: 'فروشگاه آنلاین محصولات مراقبت از پوست، آرایشی و مکمل', supportPhone: '021-91000000', cities: 'تهران، کرج، اصفهان، شیراز، مشهد، تبریز، اهواز، رشت', minOrderAmount: 200000, defaultDiscountPercent: 30, showMarketPrice: true, allowSchoolSubmissions: true, deliverySlots: ['صبح (۸-۱۲)', 'ظهر (۱۲-۱۶)'], priceDisclaimer: 'قیمت‌ها تقریبی است و ممکن است تغییر کند.',
 }
 
 interface StoredStoreData {
@@ -224,7 +224,7 @@ interface StoredStoreData {
 
 function readStored(): StoredStoreData {
   try {
-    const raw = localStorage.getItem('dermabazar-v1')
+    const raw = localStorage.getItem('healthcare-v1')
     return raw ? JSON.parse(raw) as StoredStoreData : {}
   } catch {
     return {}
@@ -234,8 +234,8 @@ function readStored(): StoredStoreData {
 function persistStore(partial: StoredStoreData) {
   try {
     const current = readStored()
-    localStorage.setItem('dermabazar-v1', JSON.stringify({ ...current, ...partial }))
-    window.dispatchEvent(new Event('dermabazar-products-changed'))
+    localStorage.setItem('healthcare-v1', JSON.stringify({ ...current, ...partial }))
+    window.dispatchEvent(new Event('healthcare-products-changed'))
   } catch { /* storage is optional in non-browser environments */ }
 }
 
