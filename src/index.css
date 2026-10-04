@@ -6,17 +6,34 @@
   html { font-family: 'Vazirmatn', system-ui, sans-serif; }
   body { @apply bg-gray-50 text-gray-900 antialiased; }
   * { -webkit-tap-highlight-color: transparent; }
-  :root { color-scheme: light; }
+  :root {
+    color-scheme: light;
+    --brand: #0f766e;
+    --brand-50: 240 253 250;
+    --brand-100: 204 251 241;
+    --brand-200: 153 246 228;
+    --brand-300: 94 234 212;
+    --brand-400: 45 212 191;
+    --brand-500: 20 184 166;
+    --brand-600: 13 148 136;
+    --brand-700: 15 118 110;
+    --brand-800: 17 94 89;
+    --brand-900: 19 78 74;
+    --brand-950: 4 47 46;
+    --hero-bg: #0f766e;
+    --button-bg: #0f766e;
+  }
 }
 
 @layer components {
   .btn { @apply inline-flex items-center justify-center gap-2 rounded-xl font-semibold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed; }
-  .btn-primary { @apply btn bg-primary-700 text-white hover:bg-primary-800 focus:ring-primary-500 px-5 py-3; }
-  .btn-secondary { @apply btn bg-white text-primary-700 border border-primary-200 hover:bg-primary-50 focus:ring-primary-400 px-5 py-3; }
+  .btn-primary { @apply btn text-white focus:ring-primary-500 px-5 py-3; background-color: #d8665d; }
+  .btn-primary:hover { filter: brightness(0.9); }
+  .btn-secondary { @apply btn bg-white text-[#b85b50] border border-[#efc8c0] hover:bg-[#fff5f2] focus:ring-[#f2b5ab] px-5 py-3; }
   .btn-ghost { @apply btn text-gray-700 hover:bg-gray-100 px-4 py-2; }
   .btn-accent { @apply btn bg-accent-500 text-white hover:bg-accent-600 focus:ring-accent-400 px-5 py-3; }
   .btn-danger { @apply btn bg-error-600 text-white hover:bg-error-700 focus:ring-error-400 px-4 py-2; }
-  .card { @apply bg-white rounded-2xl shadow-card border border-gray-100; }
+  .card { @apply bg-white rounded-2xl shadow-card border border-[#f0e5df]; }
   .input { @apply w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-gray-900 placeholder-gray-400 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none transition; }
   .label { @apply block text-sm font-medium text-gray-700 mb-1.5; }
   .chip { @apply inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-medium; }

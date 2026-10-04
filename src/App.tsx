@@ -1,4 +1,5 @@
 import { Routes, Route } from 'react-router-dom'
+import { useEffect } from 'react'
 import { AuthProvider } from './lib/auth'
 import { ToastProvider } from './lib/toast'
 import { CartSync } from './lib/cart-sync'
@@ -45,10 +46,20 @@ import AdminCoupons from './pages/admin/Coupons'
 import AdminAnnouncements from './pages/admin/Announcements'
 import AdminReports from './pages/admin/Reports'
 import AdminSettings from './pages/admin/Settings'
+import AdminContent from './pages/admin/Content'
+import AdminAppearance from './pages/admin/Appearance'
+import { useStore } from './lib/store'
+import { applyAppearance } from './lib/theme'
 import AdminTickets from './pages/admin/Tickets'
 import NotFound from './pages/NotFound'
 
 export default function App() {
+  const appearance = useStore((state) => state.appearance)
+
+  useEffect(() => {
+    applyAppearance(appearance)
+  }, [appearance])
+
   return (
     <AuthProvider>
       <ToastProvider>
@@ -82,6 +93,8 @@ export default function App() {
           <Route path="/admin" element={<AdminLayout />}>
             <Route index element={<AdminDashboard />} />
             <Route path="settings" element={<AdminSettings />} />
+            <Route path="content" element={<AdminContent />} />
+            <Route path="appearance" element={<AdminAppearance />} />
             <Route path="products" element={<AdminProducts />} />
             <Route path="products/new" element={<AdminProductEdit />} />
             <Route path="products/:id" element={<AdminProductEdit />} />

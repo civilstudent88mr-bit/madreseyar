@@ -46,7 +46,7 @@ export default function AdminSchoolDetail() {
   }
 
   if (loading) return <div className="text-center py-16"><div className="animate-spin rounded-full h-8 w-8 border-2 border-primary-600 border-t-transparent mx-auto" /></div>
-  if (!school) return <div className="text-center py-16"><p className="text-gray-500">مدرسه یافت نشد</p></div>
+  if (!school) return <div className="text-center py-16"><p className="text-gray-500">مشتری یافت نشد</p></div>
 
   return (
     <div className="space-y-4">
@@ -57,10 +57,10 @@ export default function AdminSchoolDetail() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <div className="card p-5 space-y-3 text-sm">
-          <h3 className="font-bold text-gray-800">اطلاعات مدرسه</h3>
+          <h3 className="font-bold text-gray-800">اطلاعات مشتری</h3>
           <div className="grid grid-cols-2 gap-3">
             <div><p className="text-gray-500 text-xs">نوع</p><p className="text-gray-800">{school.type}</p></div>
-            <div><p className="text-gray-500 text-xs">کد مدرسه</p><p className="text-gray-800" dir="ltr">{school.school_code}</p></div>
+            <div><p className="text-gray-500 text-xs">کد مرکز</p><p className="text-gray-800" dir="ltr">{school.school_code}</p></div>
             <div><p className="text-gray-500 text-xs">استان</p><p className="text-gray-800">{school.province}</p></div>
             <div><p className="text-gray-500 text-xs">شهر</p><p className="text-gray-800">{school.city}</p></div>
             <div><p className="text-gray-500 text-xs">کد پستی</p><p className="text-gray-800" dir="ltr">{school.postal_code}</p></div>

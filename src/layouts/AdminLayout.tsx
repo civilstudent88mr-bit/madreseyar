@@ -1,38 +1,39 @@
-import { Outlet, NavLink, Link, useNavigate } from 'react-router-dom'
+import { Outlet, NavLink, Link, Navigate } from 'react-router-dom'
 import { useState } from 'react'
-import {
-  LayoutDashboard, Settings, Package, Warehouse, FileText, BarChart3,
-  Inbox, ClipboardList, Building2, KanbanSquare, LogOut, Menu, X,
-} from 'lucide-react'
+import { LayoutDashboard, Settings, Package, Warehouse, FileText, ChartBar as BarChart3, Inbox, ClipboardList, Building2, SquareKanban as KanbanSquare, LogOut, Menu, X, Tags, Megaphone, Palette } from 'lucide-react'
 import { useAuth } from '../lib/auth'
 import { cn } from '../lib/cn'
 
 const navItems = [
   { to: '/admin', icon: LayoutDashboard, label: 'داشبورد', end: true },
   { to: '/admin/settings', icon: Settings, label: 'تنظیمات اپ' },
+  { to: '/admin/content', icon: Megaphone, label: 'محتوا و تبلیغات' },
+  { to: '/admin/appearance', icon: Palette, label: 'ظاهر اپ' },
   { to: '/admin/products', icon: Package, label: 'کالاها' },
+  { to: '/admin/categories', icon: Tags, label: 'دسته‌بندی‌ها' },
   { to: '/admin/inventory', icon: Warehouse, label: 'موجودی و انبار' },
   { to: '/admin/invoices', icon: FileText, label: 'فاکتورها' },
   { to: '/admin/sales', icon: BarChart3, label: 'گزارش فروش کالا' },
   { to: '/admin/submissions', icon: Inbox, label: 'کالاهای ثبت‌شده کاربران' },
   { to: '/admin/orders', icon: ClipboardList, label: 'سفارش‌ها' },
-  { to: '/admin/schools', icon: Building2, label: 'مدارس' },
+  { to: '/admin/schools', icon: Building2, label: 'مشتریان' },
   { to: '/admin/kanban', icon: KanbanSquare, label: 'کانبان سفارش' },
 ]
 
 export default function AdminLayout() {
-  const { admin, adminSignOut } = useAuth()
-  const navigate = useNavigate()
+  const { user, signOut, loading } = useAuth()
   const [open, setOpen] = useState(false)
 
-  if (!admin) {
-    navigate('/login')
-    return null
+  if (loading) {
+    return <div className="min-h-screen flex items-center justify-center"><div className="animate-spin rounded-full h-8 w-8 border-2 border-primary-600 border-t-transparent" /></div>
+  }
+
+  if (!user || user.role !== 'admin') {
+    return <Navigate to="/login" replace />
   }
 
   const handleSignOut = () => {
-    adminSignOut()
-    navigate('/login')
+    signOut()
   }
 
   return (
@@ -73,8 +74,8 @@ export default function AdminLayout() {
 
         <div className="p-3 border-t border-primary-700">
           <div className="px-3 py-2 mb-2">
-            <p className="text-sm font-medium text-white">مدیر سیستم</p>
-            <p className="text-xs text-primary-300">admin</p>
+            <p className="text-sm font-medium text-white">{user.name}</p>
+            <p className="text-xs text-primary-300" dir="ltr">{user.mobile}</p>
           </div>
           <button onClick={handleSignOut} className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-primary-200 hover:bg-primary-800 w-full transition">
             <LogOut className="w-5 h-5" />
@@ -91,7 +92,7 @@ export default function AdminLayout() {
             <button onClick={() => setOpen(true)} className="btn-ghost p-2">
               <Menu className="w-5 h-5" />
             </button>
-            <span className="font-bold text-primary-800">پنل مدیریت مدرسه یار</span>
+            <span className="font-bold text-primary-800">پنل مدیریت درمابازار</span>
             <div className="w-9" />
           </div>
         </header>

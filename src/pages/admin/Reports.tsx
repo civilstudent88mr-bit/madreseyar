@@ -95,7 +95,7 @@ export default function AdminReports() {
         <h3 className="font-bold text-gray-800 mb-3">آمار کلی</h3>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
           <div className="flex items-center gap-2"><Package className="w-4 h-4 text-primary-600" /><span>محصولات: {products.length}</span></div>
-          <div className="flex items-center gap-2"><Building2 className="w-4 h-4 text-primary-600" /><span>مدارس: {schools.length}</span></div>
+          <div className="flex items-center gap-2"><Building2 className="w-4 h-4 text-primary-600" /><span>مشتریان: {schools.length}</span></div>
           <div className="flex items-center gap-2"><TrendingDown className="w-4 h-4 text-success-600" /><span>تأیید شده: {schools.filter((s) => s.status === 'approved').length}</span></div>
           <div className="flex items-center gap-2"><BarChart3 className="w-4 h-4 text-primary-600" /><span>تحویل شده: {orders.filter((o) => o.status === 'delivered').length}</span></div>
         </div>

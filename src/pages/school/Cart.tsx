@@ -4,6 +4,7 @@ import { useCart } from '../../lib/cart'
 import { useAuth } from '../../lib/auth'
 import { formatToman, formatTomanShort, savedAmount } from '../../lib/format'
 import { EmptyState } from '../../lib/ui'
+import ProductImage from '../../components/ProductImage'
 
 export default function Cart() {
   const { lines, updateQty, remove, clear } = useCart()
@@ -49,11 +50,10 @@ export default function Cart() {
             const slug = l.product?.slug
             const ourPrice = l.product?.our_price ?? l.bundle?.our_total ?? 0
             const marketPrice = l.product?.market_price ?? l.bundle?.market_total ?? 0
-            const img = l.product ? `https://picsum.photos/seed/${l.product.slug}/200/200` : `https://picsum.photos/seed/${l.bundle?.slug}/200/200`
             return (
               <div key={l.id} className="card p-3 flex items-center gap-3">
                 <Link to={slug ? `/product/${slug}` : '#'} className="flex-shrink-0">
-                  <img src={img} alt={name} className="w-16 h-16 rounded-lg object-cover" />
+                  <ProductImage src={l.product?.image} name={name} className="w-16 h-16 rounded-lg" />
                 </Link>
                 <div className="flex-1 min-w-0">
                   <Link to={slug ? `/product/${slug}` : '#'} className="font-bold text-sm text-gray-800 hover:text-primary-700 truncate block">{name}</Link>
@@ -83,7 +83,7 @@ export default function Cart() {
               <span className="text-gray-400 line-through">{formatTomanShort(marketTotal)} ت</span>
             </div>
             <div className="flex justify-between text-sm">
-              <span className="text-gray-700 font-medium">قیمت مدرسه یار</span>
+              <span className="text-gray-700 font-medium">قیمت درمابازار</span>
               <span className="font-bold text-primary-700">{formatTomanShort(subtotal)} ت</span>
             </div>
             <div className="flex justify-between bg-success-50 rounded-xl px-3 py-2.5">

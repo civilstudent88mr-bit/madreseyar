@@ -1,55 +1,78 @@
-import { useState } from 'react'
-import { Link } from 'react-router-dom'
-import { Package, Phone, KeyRound, Eye, EyeOff, ShieldCheck, Lock } from 'lucide-react'
+import { useState, useCallback, useEffect } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
+import { Package, Phone, KeyRound, Eye, EyeOff, ShieldCheck, Lock, RefreshCw } from 'lucide-react'
 import { useToast } from '../../lib/toast'
-
-const DEMO_MOBILE = '09123456789'
-const DEMO_CODE = '600060'
-
-function normalizeMobile(v: string): string {
-  return v.replace(/[۰-۹]/g, (d) => String('۰۱۲۳۴۵۶۷۸۹'.indexOf(d))).replace(/\s/g, '')
-}
+import { useAuth, normalizeMobile } from '../../lib/auth'
 
 function validatePassword(pw: string): string | null {
   if (pw.length < 8) return 'رمز باید حداقل ۸ کاراکتر باشد'
-  const hasLetter = /[a-zA-Z\u0600-\u06FF]/.test(pw)
+  const hasLetter = /[a-zA-Z]/.test(pw)
   const hasDigit = /\d/.test(pw)
-  if (!hasLetter || !hasDigit) return 'رمز باید شامل حروف و اعداد باشد'
+  if (!hasLetter || !hasDigit) return 'رمز باید حداقل ۸ کاراکتر و ترکیبی از حرف انگلیسی و عدد باشد'
   return null
+}
+
+function generateCaptcha(): string {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
+  let s = ''
+  for (let i = 0; i < 4; i++) s += chars[Math.floor(Math.random() * chars.length)]
+  return s
 }
 
 export default function ForgotPassword() {
   const { toast } = useToast()
+  const navigate = useNavigate()
+  const { requestOtp, verifyOtp, resetPassword } = useAuth()
   const [mobile, setMobile] = useState('')
   const [code, setCode] = useState('')
   const [newPw, setNewPw] = useState('')
   const [show, setShow] = useState(false)
   const [step, setStep] = useState<'mobile' | 'code' | 'done'>('mobile')
   const [sending, setSending] = useState(false)
+  const [generatedOtp, setGeneratedOtp] = useState('')
+  const [resendTimer, setResendTimer] = useState(0)
+  const [captcha, setCaptcha] = useState(generateCaptcha())
+  const [captchaInput, setCaptchaInput] = useState('')
+
+  const refreshCaptcha = useCallback(() => {
+    setCaptcha(generateCaptcha())
+    setCaptchaInput('')
+  }, [])
+
+  useEffect(() => {
+    if (resendTimer > 0) {
+      const t = setTimeout(() => setResendTimer((s) => s - 1), 1000)
+      return () => clearTimeout(t)
+    }
+  }, [resendTimer])
 
   const sendCode = (e: React.FormEvent) => {
     e.preventDefault()
+    if (captchaInput.toUpperCase() !== captcha) { toast('error', 'کد امنیتی اشتباه است'); refreshCaptcha(); return }
     const norm = normalizeMobile(mobile)
     if (!/^09\d{9}$/.test(norm)) { toast('error', 'شماره موبایل معتبر نیست'); return }
     setSending(true)
     setTimeout(() => {
+      const otp = requestOtp(norm)
       setSending(false)
+      if (!otp) { toast('error', 'این شماره ثبت نشده است'); return }
+      setGeneratedOtp(otp)
       setStep('code')
-      if (norm === DEMO_MOBILE) {
-        toast('success', `کد ارسال شد (دمو: ${DEMO_CODE})`)
-      } else {
-        toast('success', 'کد ۶ رقمی ارسال شد')
-      }
-    }, 600)
+      setResendTimer(120)
+      toast('success', `کد بازیابی شما: ${otp}`)
+    }, 500)
   }
 
   const resetPw = (e: React.FormEvent) => {
     e.preventDefault()
     const normCode = normalizeMobile(code)
     const normMobile = normalizeMobile(mobile)
-    if (normMobile === DEMO_MOBILE && normCode !== DEMO_CODE) { toast('error', 'کد اشتباه است'); return }
+    const ok = verifyOtp(normMobile, normCode)
+    if (!ok) { toast('error', 'کد اشتباه یا منقضی است'); return }
     const err = validatePassword(newPw)
     if (err) { toast('error', err); return }
+    const pwOk = resetPassword(normMobile, newPw)
+    if (!pwOk) { toast('error', 'خطا در ذخیره رمز'); return }
     setStep('done')
     toast('success', 'رمز جدید ثبت شد')
   }
@@ -74,6 +97,20 @@ export default function ForgotPassword() {
                 <Phone className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
               </div>
             </div>
+            <div>
+              <label className="label">کد امنیتی</label>
+              <div className="flex gap-2 items-center">
+                <input required value={captchaInput} onChange={(e) => setCaptchaInput(e.target.value)} className="input flex-1" placeholder="کد ۴ رقمی" dir="ltr" maxLength={4} />
+                <div className="flex items-center gap-1">
+                  <div className="px-3 py-2.5 bg-primary-50 rounded-xl font-extrabold text-lg text-primary-700 tracking-widest select-none" style={{ fontFamily: 'monospace' }}>
+                    {captcha}
+                  </div>
+                  <button type="button" onClick={refreshCaptcha} className="btn-ghost p-2">
+                    <RefreshCw className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            </div>
             <button type="submit" disabled={sending} className="btn-primary w-full py-3.5">
               {sending ? 'در حال ارسال...' : 'ارسال کد تأیید'}
             </button>
@@ -87,6 +124,11 @@ export default function ForgotPassword() {
               <ShieldCheck className="w-5 h-5 text-accent-600 flex-shrink-0" />
               <span>کد ۶ رقمی به شماره {mobile} ارسال شد</span>
             </div>
+            {generatedOtp && (
+              <div className="bg-accent-100 border border-accent-200 rounded-xl px-4 py-2.5 text-center text-accent-800 text-sm font-bold">
+                کد بازیابی شما: <span dir="ltr" className="text-lg">{generatedOtp}</span>
+              </div>
+            )}
             <div>
               <label className="label">کد تأیید</label>
               <div className="relative">
@@ -102,10 +144,15 @@ export default function ForgotPassword() {
                   {show ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
               </div>
-              <p className="text-xs text-gray-400 mt-1">رمز باید حداقل ۸ کاراکتر باشد و شامل حروف و اعداد باشد.</p>
+              <p className="text-xs text-gray-400 mt-1">رمز باید حداقل ۸ کاراکتر باشد و شامل حروف انگلیسی و اعداد باشد.</p>
             </div>
             <button type="submit" className="btn-primary w-full py-3.5"><Lock className="w-4 h-4" /> ثبت رمز جدید</button>
-            <button type="button" onClick={() => setStep('mobile')} className="btn-ghost w-full py-2.5 text-sm">تغییر شماره</button>
+            <div className="flex gap-2">
+              <button type="button" disabled={resendTimer > 0} onClick={sendCode} className="btn-ghost flex-1 py-2.5 text-sm disabled:opacity-40">
+                {resendTimer > 0 ? `ارسال مجدد (${resendTimer}s)` : 'ارسال مجدد'}
+              </button>
+              <button type="button" onClick={() => setStep('mobile')} className="btn-ghost flex-1 py-2.5 text-sm">تغییر شماره</button>
+            </div>
           </form>
         )}
 
@@ -113,7 +160,7 @@ export default function ForgotPassword() {
           <div className="card p-6 text-center">
             <ShieldCheck className="w-12 h-12 text-success-600 mx-auto mb-3" />
             <p className="text-gray-700 mb-4">رمز جدید شما ثبت شد. لطفاً وارد شوید.</p>
-            <Link to="/login" className="btn-primary">بازگشت به ورود</Link>
+            <button onClick={() => navigate('/login')} className="btn-primary">بازگشت به ورود</button>
           </div>
         )}
       </div>

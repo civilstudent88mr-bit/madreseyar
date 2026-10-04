@@ -9,10 +9,10 @@ import type { School } from '../../lib/types'
 export default function SchoolProfile() {
   const { school, profile, refreshProfile } = useAuth()
   const { toast } = useToast()
-  const { settings, submitProduct, submissions } = useStore()
+  const { settings, submitProduct, submissions, categories } = useStore()
   const [form, setForm] = useState<Partial<School>>({})
   const [saving, setSaving] = useState(false)
-  const [subForm, setSubForm] = useState({ productName: '', category: 'بهداشتی', qty: 1, note: '' })
+  const [subForm, setSubForm] = useState({ productName: '', category: categories.filter((c) => c.active)[0]?.name ?? '', qty: 1, note: '' })
 
   useEffect(() => {
     if (school) setForm(school)
@@ -31,11 +31,11 @@ export default function SchoolProfile() {
     toast('success', 'اطلاعات ذخیره شد')
   }
 
-  if (!school) return <div className="text-center py-16 text-gray-500">اطلاعات مدرسه موجود نیست</div>
+  if (!school) return <div className="text-center py-16 text-gray-500">اطلاعات حساب موجود نیست</div>
 
   return (
     <div className="space-y-4">
-      <h1 className="text-xl font-extrabold text-gray-800 flex items-center gap-2"><Building2 className="w-5 h-5 text-primary-700" /> پروفایل مدرسه</h1>
+      <h1 className="text-xl font-extrabold text-gray-800 flex items-center gap-2"><Building2 className="w-5 h-5 text-primary-700" /> پروفایل حساب</h1>
 
       <div className="card p-4 flex items-center gap-3">
         <div className="w-12 h-12 rounded-xl bg-primary-100 flex items-center justify-center"><Building2 className="w-6 h-6 text-primary-700" /></div>
@@ -50,8 +50,8 @@ export default function SchoolProfile() {
 
       <div className="card p-5 space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div><label className="label">نام مدرسه</label><input value={form.name ?? ''} onChange={(e) => setForm({ ...form, name: e.target.value })} className="input" /></div>
-          <div><label className="label">کد مدرسه</label><input value={form.school_code ?? ''} readOnly className="input bg-gray-50" /></div>
+          <div><label className="label">نام مرکز</label><input value={form.name ?? ''} onChange={(e) => setForm({ ...form, name: e.target.value })} className="input" /></div>
+          <div><label className="label">کد مرکز</label><input value={form.school_code ?? ''} readOnly className="input bg-gray-50" /></div>
           <div><label className="label">استان</label><input value={form.province ?? ''} onChange={(e) => setForm({ ...form, province: e.target.value })} className="input" /></div>
           <div><label className="label">شهر</label><input value={form.city ?? ''} onChange={(e) => setForm({ ...form, city: e.target.value })} className="input" /></div>
           <div className="md:col-span-2"><label className="label">آدرس</label><textarea value={form.address ?? ''} onChange={(e) => setForm({ ...form, address: e.target.value })} className="input min-h-[60px]" /></div>
@@ -67,9 +67,8 @@ export default function SchoolProfile() {
         <h3 className="font-bold text-gray-800 mb-3">اطلاعات کاربر</h3>
         <div className="grid grid-cols-2 gap-4 text-sm">
           <div><p className="text-gray-500 text-xs">نام</p><p className="text-gray-800">{profile?.full_name}</p></div>
-          <div><p className="text-gray-500 text-xs">ایمیل</p><p className="text-gray-800" dir="ltr">{profile?.email}</p></div>
           <div><p className="text-gray-500 text-xs">موبایل</p><p className="text-gray-800" dir="ltr">{profile?.mobile}</p></div>
-          <div><p className="text-gray-500 text-xs">نقش</p><p className="text-gray-800">{profile?.role === 'school_admin' ? 'مدیر مدرسه' : 'کاربر مدرسه'}</p></div>
+          <div><p className="text-gray-500 text-xs">نقش</p><p className="text-gray-800">{profile?.role === 'school_admin' ? 'مدیر مرکز' : 'کاربر مرکز'}</p></div>
         </div>
       </div>
 
@@ -81,7 +80,7 @@ export default function SchoolProfile() {
             <div><label className="label">نام کالا</label><input value={subForm.productName} onChange={(e) => setSubForm({ ...subForm, productName: e.target.value })} className="input" /></div>
             <div><label className="label">دسته پیشنهادی</label>
               <select value={subForm.category} onChange={(e) => setSubForm({ ...subForm, category: e.target.value })} className="input">
-                {['بهداشتی', 'کاغذی', 'نوشت‌افزار', 'اداری', 'پلاستیک', 'سایر'].map((c) => <option key={c} value={c}>{c}</option>)}
+                {categories.filter((c) => c.active).map((c) => <option key={c.id} value={c.name}>{c.name}</option>)}
               </select>
             </div>
             <div><label className="label">تعداد تقریبی</label><input type="number" value={subForm.qty} onChange={(e) => setSubForm({ ...subForm, qty: Number(e.target.value) })} className="input" dir="ltr" /></div>
@@ -90,7 +89,7 @@ export default function SchoolProfile() {
           <button onClick={() => {
             if (!subForm.productName.trim()) { toast('error', 'نام کالا را وارد کنید'); return }
             submitProduct({ productName: subForm.productName, category: subForm.category, qty: subForm.qty, note: subForm.note, submittedBy: profile?.full_name ?? 'نامشخص', schoolName: school?.name ?? 'نامشخص' })
-            setSubForm({ productName: '', category: 'بهداشتی', qty: 1, note: '' })
+            setSubForm({ productName: '', category: categories.filter((c) => c.active)[0]?.name ?? '', qty: 1, note: '' })
             toast('success', 'درخواست شما ثبت شد')
           }} className="btn-primary py-3"><Send className="w-4 h-4" /> ثبت درخواست</button>
 

@@ -1,232 +1,58 @@
-import { useEffect, useState } from 'react'
-import { useParams, Link } from 'react-router-dom'
-import { ShoppingCart, Heart, Share2, Check, Minus, Plus, Package, TrendingDown } from 'lucide-react'
-import { supabase } from '../../lib/supabase'
-import type { Product, ProductImage, Category } from '../../lib/types'
-import { formatToman, formatTomanShort, discountPercent, savedAmount } from '../../lib/format'
+import { useMemo, useState } from 'react'
+import { Link, useParams } from 'react-router-dom'
+import { Check, ChevronLeft, Heart, Info, Minus, Package, Plus, RotateCcw, Share2, ShieldCheck, ShoppingCart, Truck, TrendingDown } from 'lucide-react'
+import { useStore, productSlug, toProduct } from '../../lib/store'
 import { useCart } from '../../lib/cart'
 import { useToast } from '../../lib/toast'
-import { useAuth } from '../../lib/auth'
-import { Breadcrumbs, SkeletonCard } from '../../lib/ui'
+import { formatToman, savedAmount, discountPercent } from '../../lib/format'
 import ProductCard from '../../components/ProductCard'
+import ProductImage from '../../components/ProductImage'
 
 export default function ProductDetail() {
   const { slug } = useParams()
+  const { products } = useStore()
   const { addProduct } = useCart()
   const { toast } = useToast()
-  const { session } = useAuth()
-  const [product, setProduct] = useState<Product | null>(null)
-  const [images, setImages] = useState<ProductImage[]>([])
-  const [category, setCategory] = useState<Category | null>(null)
-  const [related, setRelated] = useState<Product[]>([])
-  const [loading, setLoading] = useState(true)
+  const product = useMemo(() => products.find((p) => p.active && productSlug(p) === slug), [products, slug])
   const [qty, setQty] = useState(1)
-  const [isFav, setIsFav] = useState(false)
+  const [liked, setLiked] = useState(false)
 
-  useEffect(() => {
-    if (!slug) return
-    setLoading(true)
-    ;(async () => {
-      const { data: prod } = await supabase.from('products').select('*').eq('slug', slug).maybeSingle()
-      if (!prod) { setLoading(false); return }
-      setProduct(prod as Product)
-      setQty((prod as Product).min_order_qty)
-      const [{ data: imgs }, { data: cat }, { data: rel }] = await Promise.all([
-        supabase.from('product_images').select('*').eq('product_id', (prod as Product).id).order('sort_order'),
-        supabase.from('categories').select('*').eq('id', (prod as Product).category_id).maybeSingle(),
-        supabase.from('products').select('*').eq('category_id', (prod as Product).category_id).eq('is_active', true).neq('id', (prod as Product).id).limit(4),
-      ])
-      setImages(imgs as ProductImage[] ?? [])
-      setCategory(cat as Category | null)
-      setRelated(rel as Product[] ?? [])
-      setLoading(false)
+  if (!product) return <div className="max-w-7xl mx-auto px-4 py-20 text-center"><Package className="w-12 h-12 text-gray-300 mx-auto mb-4" /><h2 className="text-xl font-bold text-gray-700">محصول یافت نشد</h2><Link to="/catalog" className="btn-primary mt-4">بازگشت به محصولات</Link></div>
 
-      if (session?.user?.id) {
-        const { data: fav } = await supabase.from('favorites').select('id').eq('user_id', session.user.id).eq('product_id', (prod as Product).id).maybeSingle()
-        setIsFav(!!fav)
-      }
-    })()
-  }, [slug, session])
+  const converted = toProduct(product)
+  const disc = discountPercent(product.marketPrice, product.ourPrice)
+  const out = product.stock <= 0
+  const related = products.filter((p) => p.active && p.category === product.category && p.id !== product.id).slice(0, 4)
+  const share = async () => { try { await navigator.clipboard.writeText(window.location.href); toast('success', 'لینک کپی شد') } catch { toast('error', 'کپی لینک ناموفق بود') } }
+  const addToCart = () => { addProduct(converted, qty); toast('success', `${product.name} به سبد اضافه شد`) }
 
-  if (loading) {
-    return <div className="max-w-7xl mx-auto px-4 py-6"><div className="grid grid-cols-1 md:grid-cols-2 gap-8"><SkeletonCard /><SkeletonCard /></div></div>
-  }
+  return <div className="bg-[#fffdfb] min-h-screen">
+    <div className="max-w-7xl mx-auto px-4 pt-5 pb-12">
+      <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-500 mb-6 overflow-hidden whitespace-nowrap"><Link to="/" className="hover:text-[#d8665d]">خانه</Link><ChevronLeft className="w-4 h-4" /><Link to="/catalog" className="hover:text-[#d8665d]">محصولات</Link><ChevronLeft className="w-4 h-4" /><span className="text-gray-700 truncate">{product.name}</span></div>
 
-  if (!product) {
-    return <div className="max-w-7xl mx-auto px-4 py-16 text-center"><Package className="w-12 h-12 text-gray-300 mx-auto mb-4" /><h2 className="text-xl font-bold text-gray-700">محصول یافت نشد</h2><Link to="/catalog" className="btn-primary mt-4">بازگشت به محصولات</Link></div>
-  }
-
-  const disc = discountPercent(product.market_price, product.our_price)
-  const outOfStock = product.stock_qty <= 0
-  const imgUrl = images[0]?.url ?? `https://picsum.photos/seed/${product.slug}/600/600`
-
-  const incQty = () => setQty((q) => Math.min(q + product.step_qty, product.max_order_qty, product.stock_qty))
-  const decQty = () => setQty((q) => Math.max(q - product.step_qty, product.min_order_qty))
-
-  const toggleFav = async () => {
-    if (!session?.user?.id) { toast('info', 'برای افزودن به علاقه‌مندی‌ها وارد شوید'); return }
-    if (isFav) {
-      await supabase.from('favorites').delete().eq('user_id', session.user.id).eq('product_id', product.id)
-      setIsFav(false)
-      toast('success', 'از علاقه‌مندی‌ها حذف شد')
-    } else {
-      await supabase.from('favorites').insert({ user_id: session.user.id, product_id: product.id })
-      setIsFav(true)
-      toast('success', 'به علاقه‌مندی‌ها اضافه شد')
-    }
-  }
-
-  const shareLink = async () => {
-    try { await navigator.clipboard.writeText(window.location.href); toast('success', 'لینک کپی شد') } catch { toast('error', 'کپی لینک ناموفق بود') }
-  }
-
-  return (
-    <div className="max-w-7xl mx-auto px-4 py-6">
-      <Breadcrumbs items={[{ label: 'خانه', to: '/' }, { label: 'محصولات', to: '/catalog' }, { label: category?.name ?? '', to: category ? `/catalog/${category.slug}` : undefined }, { label: product.name }]} />
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-10">
-        {/* Gallery */}
-        <div>
-          <div className="card overflow-hidden aspect-square bg-gray-50">
-            <img src={imgUrl} alt={product.name} className="w-full h-full object-cover" onError={(e) => { (e.target as HTMLImageElement).style.opacity = '0' }} />
-          </div>
-          {images.length > 1 && (
-            <div className="flex gap-2 mt-3 overflow-x-auto">
-              {images.map((img) => (
-                <img key={img.id} src={img.url} alt="" className="w-16 h-16 rounded-lg object-cover border border-gray-200" />
-              ))}
-            </div>
-          )}
+      <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_330px] gap-7 lg:gap-10 items-start">
+        <div className="grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_72px] gap-4 md:order-2">
+          <div className="relative rounded-3xl border border-[#eee3dd] bg-white overflow-hidden aspect-square max-h-[580px] flex items-center justify-center"><ProductImage src={product.image} name={product.name} className="w-full h-full bg-[#fbf7f4]" /><div className="absolute top-4 right-4 flex flex-col gap-2"><button onClick={() => setLiked(!liked)} className={`w-11 h-11 rounded-full bg-white shadow-md flex items-center justify-center transition ${liked ? 'text-[#d8665d]' : 'text-gray-500'}`} aria-label="افزودن به علاقه‌مندی"><Heart className={`w-5 h-5 ${liked ? 'fill-current' : ''}`} /></button><button onClick={share} className="w-11 h-11 rounded-full bg-white shadow-md text-gray-500 flex items-center justify-center" aria-label="اشتراک‌گذاری"><Share2 className="w-5 h-5" /></button></div>{disc > 0 && <span className="absolute top-4 left-4 rounded-full bg-[#d8665d] text-white px-3 py-1.5 text-xs font-bold">{disc}٪ تخفیف</span>}</div>
+          <div className="hidden md:flex flex-col gap-3">{[0, 1, 2].map((item) => <button key={item} className={`aspect-square rounded-xl border overflow-hidden ${item === 0 ? 'border-[#d8665d]' : 'border-[#eee3dd]'} bg-white`}><ProductImage src={product.image} name={product.name} className="w-full h-full bg-[#fbf7f4]" iconClassName="w-5 h-5" /></button>)}</div>
         </div>
 
-        {/* Info */}
-        <div>
-          {product.brand && <span className="text-sm text-gray-500">{product.brand}</span>}
-          <h1 className="text-2xl md:text-3xl font-extrabold text-gray-900 mt-1 mb-2">{product.name}</h1>
-          <p className="text-gray-600 leading-relaxed mb-4">{product.short_desc}</p>
-
-          <div className="flex flex-wrap items-center gap-2 mb-4">
-            <span className="chip bg-gray-100 text-gray-700">{product.unit}</span>
-            {product.pack_size && <span className="chip bg-gray-100 text-gray-700">{product.pack_size}</span>}
-            {product.is_hygiene && <span className="chip bg-success-100 text-success-700">بهداشتی</span>}
-            {product.suitable_for?.map((l) => <span key={l} className="chip bg-primary-50 text-primary-700">{l}</span>)}
-          </div>
-
-          {/* Price comparison */}
-          <div className="card p-5 mb-4">
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-sm text-gray-500">قیمت بازار</span>
-              <span className="text-sm text-gray-400 line-through">{formatToman(product.market_price)}</span>
-            </div>
-            <div className="flex items-center justify-between mb-4">
-              <span className="text-sm text-gray-700 font-medium">قیمت مدرسه یار</span>
-              <span className="text-2xl font-extrabold text-primary-700">{formatToman(product.our_price)}</span>
-            </div>
-            {disc > 0 && (
-              <div className="flex items-center justify-between bg-accent-50 rounded-xl px-4 py-3">
-                <span className="flex items-center gap-1.5 text-accent-700 font-bold text-sm">
-                  <TrendingDown className="w-4 h-4" /> {disc}٪ ارزان‌تر از بازار
-                </span>
-                <span className="text-accent-700 font-bold text-sm">صرفه‌جویی {formatToman(savedAmount(product.market_price, product.our_price))}</span>
-              </div>
-            )}
-            {/* Compare bar */}
-            <div className="mt-4">
-              <div className="flex items-center gap-2 text-xs text-gray-500 mb-1">
-                <span>مقایسه قیمت</span>
-              </div>
-              <div className="flex h-3 rounded-full overflow-hidden bg-gray-100">
-                <div className="bg-accent-400" style={{ width: `${100 - disc}%` }} />
-                <div className="bg-success-500" style={{ width: `${disc}%` }} />
-              </div>
-              <div className="flex justify-between text-[10px] text-gray-400 mt-1">
-                <span>قیمت ما</span>
-                <span>قیمت بازار</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Stock */}
-          <div className="flex items-center gap-2 mb-4">
-            {outOfStock ? (
-              <span className="chip bg-error-100 text-error-700">ناموجود</span>
-            ) : product.stock_qty <= product.low_stock_threshold ? (
-              <span className="chip bg-warning-100 text-warning-600">رو به اتمام (موجودی: {product.stock_qty})</span>
-            ) : (
-              <span className="chip bg-success-100 text-success-700">موجود</span>
-            )}
-          </div>
-
-          {/* Qty + Add to cart */}
-          {!outOfStock && (
-            <div className="flex items-center gap-3 mb-4">
-              <div className="flex items-center border border-gray-300 rounded-xl">
-                <button onClick={decQty} className="px-3 py-3 hover:bg-gray-50 rounded-r-xl"><Minus className="w-4 h-4" /></button>
-                <span className="px-4 font-bold text-lg w-12 text-center">{qty}</span>
-                <button onClick={incQty} className="px-3 py-3 hover:bg-gray-50 rounded-l-xl"><Plus className="w-4 h-4" /></button>
-              </div>
-              <button
-                onClick={() => { addProduct(product, qty); toast('success', `${product.name} به سبد اضافه شد`) }}
-                className="btn-primary flex-1 py-3.5"
-              >
-                <ShoppingCart className="w-5 h-5" /> افزودن به سبد
-              </button>
-            </div>
-          )}
-
-          <div className="flex gap-2">
-            <button onClick={toggleFav} className="btn-secondary py-3 px-4">
-              <Heart className={`w-5 h-5 ${isFav ? 'fill-error-500 text-error-500' : ''}`} /> علاقه‌مندی
-            </button>
-            <button onClick={shareLink} className="btn-secondary py-3 px-4">
-              <Share2 className="w-5 h-5" /> اشتراک‌گذاری
-            </button>
-          </div>
-
-          <p className="text-xs text-gray-400 mt-4 leading-relaxed">
-            قیمت بازار تقریبی فروشگاه‌های معتبر است و ممکن است کمی متفاوت باشد.
-          </p>
+        <div className="md:order-1 lg:pt-2">
+          <div className="flex items-center gap-2 mb-3"><span className="rounded-full bg-[#fce8e4] text-[#b85b50] px-3 py-1 text-xs font-bold">{product.category}</span><span className="text-xs text-gray-500">کد کالا: {product.sku || 'بدون کد'}</span></div>
+          <h1 className="text-2xl md:text-3xl font-black text-[#3f2c29] leading-relaxed mb-2">{product.name}</h1>
+          <p className="text-gray-500 text-sm leading-7 mb-6">{product.desc}</p>
+          <div className="border-t border-[#eee3dd] pt-5 mb-6"><h2 className="font-black text-[#493633] mb-3">ویژگی‌های محصول</h2><ul className="space-y-2.5 text-sm text-gray-600"><li className="flex gap-2"><Check className="w-4 h-4 text-[#d8665d] shrink-0 mt-0.5" /> مناسب برای استفاده روزانه و روتین مراقبتی</li><li className="flex gap-2"><Check className="w-4 h-4 text-[#d8665d] shrink-0 mt-0.5" /> انتخابی کاربردی با کیفیت و قیمت مناسب</li><li className="flex gap-2"><Check className="w-4 h-4 text-[#d8665d] shrink-0 mt-0.5" /> بسته‌بندی سالم و ارسال مطمئن</li></ul></div>
+          <div className="flex flex-wrap gap-2 mb-7"><span className="rounded-lg bg-[#f7f2ef] px-3 py-2 text-xs text-gray-600">واحد: {product.unit}</span><span className="rounded-lg bg-[#f7f2ef] px-3 py-2 text-xs text-gray-600">بسته: {product.packQty}</span><span className={`rounded-lg px-3 py-2 text-xs font-bold ${out ? 'bg-red-50 text-red-600' : 'bg-green-50 text-green-700'}`}>{out ? 'ناموجود' : `موجودی: ${product.stock}`}</span></div>
+          <div className="hidden lg:grid grid-cols-2 gap-3 border-t border-[#eee3dd] pt-5"><Service icon={ShieldCheck} title="تضمین اصالت کالا" /><Service icon={Truck} title="ارسال سریع" /><Service icon={RotateCcw} title="ضمانت بازگشت" /><Service icon={Info} title="مشاوره خرید" /></div>
         </div>
+
+        <aside className="md:order-3 lg:sticky lg:top-28 rounded-2xl border border-[#eaded8] bg-white p-5 shadow-lg shadow-[#7a5548]/5"><div className="flex items-center justify-between text-sm mb-4"><span className="text-gray-500">قیمت مصرف‌کننده</span>{disc > 0 && <span className="rounded-md bg-[#fce8e4] text-[#c45c52] px-2 py-1 text-xs font-bold">{disc}٪ تخفیف</span>}</div><div className="flex items-end gap-2 mb-1"><strong className="text-2xl font-black text-[#3f2c29]">{formatToman(product.ourPrice)}</strong><span className="text-xs text-gray-500 mb-1">تومان</span></div>{disc > 0 && <><div className="text-xs text-gray-400 line-through mb-2">{formatToman(product.marketPrice)} تومان</div><div className="text-xs text-[#5d7d5b] mb-5">{formatToman(savedAmount(product.marketPrice, product.ourPrice))} تومان صرفه‌جویی شما</div></>}<div className="border-t border-[#eee3dd] pt-4">{!out && <div className="flex items-center gap-3 mb-4"><span className="text-sm text-gray-600">تعداد:</span><div className="flex items-center justify-between border border-[#dfd3cd] rounded-xl flex-1 h-11"><button onClick={() => setQty((v) => Math.max(1, v - 1))} className="px-3 h-full text-gray-500 hover:text-[#d8665d]"><Minus className="w-4 h-4" /></button><span className="font-bold">{qty}</span><button onClick={() => setQty((v) => Math.min(product.stock, v + 1))} className="px-3 h-full text-gray-500 hover:text-[#d8665d]"><Plus className="w-4 h-4" /></button></div></div>}{out ? <div className="rounded-xl bg-red-50 text-red-600 text-center py-3 text-sm font-bold">این محصول فعلاً ناموجود است</div> : <button onClick={addToCart} className="btn w-full bg-[#d8665d] hover:bg-[#be554d] text-white py-3.5 shadow-lg shadow-[#d8665d]/20"><ShoppingCart className="w-5 h-5" /> افزودن به سبد خرید</button>}</div><p className="text-[11px] text-gray-400 text-center mt-4">قیمت نهایی در سبد خرید نمایش داده می‌شود</p></aside>
       </div>
 
-      {/* Specs */}
-      {Object.keys(product.specs).length > 0 && (
-        <div className="mt-10">
-          <h2 className="text-xl font-extrabold text-gray-800 mb-4">مشخصات محصول</h2>
-          <div className="card overflow-hidden">
-            <table className="w-full">
-              <tbody>
-                {Object.entries(product.specs).map(([k, v], i) => (
-                  <tr key={k} className={i % 2 === 0 ? 'bg-gray-50' : ''}>
-                    <td className="px-4 py-3 text-sm text-gray-500 w-1/3">{k}</td>
-                    <td className="px-4 py-3 text-sm text-gray-800 font-medium">{v}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
+      <div className="mt-12 rounded-2xl border border-[#eee3dd] bg-white overflow-hidden"><div className="flex items-center gap-6 border-b border-[#eee3dd] px-5 sm:px-8"><div className="py-4 border-b-2 border-[#d8665d] text-sm font-bold text-[#d8665d]">توضیحات محصول</div><div className="py-4 text-sm text-gray-500">مشخصات فنی</div><div className="py-4 text-sm text-gray-500">نظرات کاربران</div></div><div className="px-5 sm:px-8 py-6 text-sm text-gray-600 leading-8"><p>{product.desc}. این محصول با هدف استفاده آسان در روتین روزانه انتخاب شده است. برای دریافت نتیجه بهتر، دستور مصرف درج‌شده روی بسته‌بندی را رعایت کنید و محصول را در شرایط مناسب نگهداری کنید.</p></div></div>
 
-      {/* Long desc */}
-      {product.long_desc && (
-        <div className="mt-8">
-          <h2 className="text-xl font-extrabold text-gray-800 mb-4">توضیحات</h2>
-          <div className="card p-5">
-            <p className="text-gray-600 leading-relaxed">{product.long_desc}</p>
-          </div>
-        </div>
-      )}
-
-      {/* Related */}
-      {related.length > 0 && (
-        <div className="mt-10">
-          <h2 className="text-xl font-extrabold text-gray-800 mb-4">محصولات مرتبط</h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
-            {related.map((p) => <ProductCard key={p.id} product={p} />)}
-          </div>
-        </div>
-      )}
+      {related.length > 0 && <section className="mt-12"><div className="flex items-center justify-between mb-5"><h2 className="text-xl font-black text-[#3f2c29]">محصولات مرتبط</h2><Link to="/catalog" className="text-sm text-[#b85b50] font-bold flex items-center gap-1">مشاهده همه <ChevronLeft className="w-4 h-4" /></Link></div><div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-5">{related.map((p) => <ProductCard key={p.id} product={p} />)}</div></section>}
     </div>
-  )
+  </div>
 }
+
+function Service({ icon: Icon, title }: { icon: typeof ShieldCheck; title: string }) { return <div className="flex items-center gap-2 text-xs text-gray-600"><Icon className="w-5 h-5 text-[#d8665d]" />{title}</div> }

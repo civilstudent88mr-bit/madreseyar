@@ -73,7 +73,7 @@ export default function AdminOrderDetail() {
               ))}
             </div>
             <div className="border-t border-gray-200 mt-3 pt-3 space-y-1 text-sm">
-              <div className="flex justify-between"><span className="text-gray-500">صرفه‌جویی مدرسه</span><span className="text-success-600 font-bold">{formatTomanShort(order.saved_amount_snapshot)} ت</span></div>
+              <div className="flex justify-between"><span className="text-gray-500">صرفه‌جویی مشتری</span><span className="text-success-600 font-bold">{formatTomanShort(order.saved_amount_snapshot)} ت</span></div>
               <div className="flex justify-between"><span className="text-gray-500">ارسال</span><span>{order.shipping_fee === 0 ? 'رایگان' : `${formatTomanShort(order.shipping_fee)} ت`}</span></div>
               <div className="flex justify-between font-bold text-base pt-1"><span>مبلغ کل</span><span className="text-primary-700">{formatToman(order.grand_total)}</span></div>
             </div>
@@ -95,11 +95,11 @@ export default function AdminOrderDetail() {
         <div className="space-y-3 no-print">
           {school && (
             <div className="card p-4 space-y-2 text-sm">
-              <h3 className="font-bold text-gray-800">اطلاعات مدرسه</h3>
+              <h3 className="font-bold text-gray-800">اطلاعات مشتری</h3>
               <p className="font-medium text-gray-800">{school.name}</p>
               <p className="text-gray-600">{school.province} · {school.city}</p>
               <p className="text-gray-600">{school.address}</p>
-              <Link to={`/admin/schools/${school.id}`} className="text-primary-700 text-xs">مشاهده پروفایل مدرسه</Link>
+              <Link to={`/admin/schools/${school.id}`} className="text-primary-700 text-xs">مشاهده پروفایل مشتری</Link>
             </div>
           )}
           <div className="card p-4 space-y-2 text-sm">
@@ -111,7 +111,7 @@ export default function AdminOrderDetail() {
           </div>
           <div className="card p-4 space-y-2 text-sm">
             <h3 className="font-bold text-gray-800">پرداخت</h3>
-            <p>{order.payment_method === 'card_to_card' ? 'کارت به کارت' : order.payment_method === 'cash_on_delivery' ? 'پرداخت در محل' : order.payment_method === 'school_credit' ? 'اعتبار مدرسه' : '—'}</p>
+            <p>{order.payment_method === 'card_to_card' ? 'کارت به کارت' : order.payment_method === 'cash_on_delivery' ? 'پرداخت در محل' : order.payment_method === 'school_credit' ? 'اعتبار حساب' : '—'}</p>
             <p><span className="text-gray-500">وضعیت: </span>{order.payment_status === 'paid' ? 'پرداخت شده' : order.payment_status === 'pending_receipt' ? 'در انتظار فیش' : 'پرداخت نشده'}</p>
             {order.payment_status === 'pending_receipt' && (
               <div className="flex gap-2 pt-2">

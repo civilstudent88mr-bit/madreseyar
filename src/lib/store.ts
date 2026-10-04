@@ -1,65 +1,4 @@
 import { create } from 'zustand'
-import { persist } from 'zustand/middleware'
-import { formatJalaliDateShort, todayJalaliShort, toJalaliDate } from './jalali'
-
-export interface AppSettings {
-  storeName: string
-  slogan: string
-  supportPhone: string
-  cities: string
-  minOrderAmount: number
-  showMarketPrice: boolean
-  defaultDiscountPercent: number
-  deliverySlots: string[]
-  priceDisclaimer: string
-  allowSchoolSubmissions: boolean
-}
-
-export interface StockMove {
-  id: string
-  productId: string
-  productName: string
-  delta: number
-  reason: 'purchase' | 'waste' | 'adjust' | 'sale' | 'invoice_in' | 'invoice_out'
-  date: string
-  note: string
-}
-
-export interface InvoiceItem {
-  productId: string
-  name: string
-  qty: number
-  unitPrice: number
-  marketPrice: number
-}
-
-export interface Invoice {
-  id: string
-  number: string
-  type: 'purchase' | 'sale'
-  status: 'draft' | 'posted' | 'void' | 'submitted' | 'confirmed' | 'packing' | 'shipped' | 'delivered'
-  date: string
-  party: string
-  items: InvoiceItem[]
-  total: number
-  marketTotal: number
-  savedAmount: number
-  note: string
-  orderId?: string | null
-}
-
-export interface Submission {
-  id: string
-  productName: string
-  category: string
-  qty: number
-  note: string
-  status: 'pending' | 'approved' | 'rejected'
-  submittedBy: string
-  schoolName: string
-  date: string
-  adminNote: string
-}
 
 export interface StoreProduct {
   id: string
@@ -72,171 +11,347 @@ export interface StoreProduct {
   ourPrice: number
   stock: number
   featured: boolean
+  active: boolean
   desc: string
   tags: string[]
+  createdAt: string
+  image?: string
+}
+
+export interface StoreCategory {
+  id: string
+  name: string
+  slug: string
+  icon: string
+  order: number
+  active: boolean
+}
+
+export interface StockMove {
+  id: string
+  delta: number
+  productName: string
+  reason: 'purchase' | 'waste' | 'adjust'
+  note: string
+  date: string
+}
+
+export interface InvoiceItem {
+  productId: string
+  name: string
+  image?: string
+  qty: number
+  unitPrice: number
+  marketPrice: number
+}
+
+export interface Invoice {
+  id: string
+  type: 'purchase' | 'sale'
+  status: 'draft' | 'posted' | 'void' | 'submitted' | 'confirmed' | 'packing' | 'shipped' | 'delivered'
+  number: string
+  date: string
+  party: string
+  items: InvoiceItem[]
+  total: number
+  marketTotal: number
+  savedAmount: number
+  note: string
+  orderId: string | null
+}
+
+export interface Submission {
+  id: string
+  status: 'pending' | 'approved' | 'rejected'
+  productName: string
+  category: string
+  qty: number
+  schoolName: string
+  submittedBy: string
+  date: string
+  note: string
+  adminNote: string
+}
+
+export interface FeatureCard {
+  id: string
+  icon: string
+  title: string
+  desc: string
+  show: boolean
+}
+
+export interface SiteContent {
+  storeName: string
+  slogan: string
+  heroTitle: string
+  heroSubtitle: string
+  heroText: string
+  heroBadgeShow: boolean
+  heroBadgeText: string
+  heroButton1Text: string
+  heroButton2Text: string
+  heroShow: boolean
+  features: FeatureCard[]
+  featuresShow: boolean
+  footerText: string
+  footerShow: boolean
+  priceDisclaimer: string
+  priceDisclaimerShow: boolean
+}
+
+export interface AppearanceSettings {
+  brandColor: string
+  heroBgColor: string
+  buttonColor: string
+  logo?: string
+  showHeaderSearch: boolean
+  showBundles: boolean
+  showMarketPrice: boolean
+}
+
+export interface AppSettings {
+  storeName: string
+  slogan: string
+  supportPhone: string
+  cities: string
+  minOrderAmount: number
+  defaultDiscountPercent: number
+  showMarketPrice: boolean
+  allowSchoolSubmissions: boolean
+  deliverySlots: string[]
+  priceDisclaimer: string
 }
 
 interface StoreState {
-  settings: AppSettings
   products: StoreProduct[]
+  categories: StoreCategory[]
   stockMoves: StockMove[]
   invoices: Invoice[]
   submissions: Submission[]
-
-  updateSettings: (s: Partial<AppSettings>) => void
-  upsertProduct: (p: StoreProduct) => void
-  deleteProduct: (id: string) => void
+  settings: AppSettings
+  content: SiteContent
+  appearance: AppearanceSettings
   adjustStock: (productId: string, delta: number, reason: StockMove['reason'], note: string) => void
-  createInvoice: (inv: Omit<Invoice, 'id' | 'number'>) => Invoice
+  createInvoice: (payload: Omit<Invoice, 'id'>) => void
   voidInvoice: (id: string) => void
-  productSalesStats: (productId: string) => { todayCount: number; todayAmount: number; monthCount: number; monthAmount: number; totalCount: number; totalAmount: number }
-  submitProduct: (s: Omit<Submission, 'id' | 'status' | 'date' | 'adminNote'>) => void
-  reviewSubmission: (id: string, action: 'approved' | 'rejected', note: string, prices?: { market: number; our: number; stock: number }) => void
+  upsertProduct: (product: StoreProduct) => void
+  deleteProduct: (id: string) => void
+  upsertCategory: (category: StoreCategory) => void
+  deleteCategory: (id: string) => boolean
+  productSalesStats: (productId: string) => {
+    todayAmount: number
+    todayCount: number
+    monthAmount: number
+    monthCount: number
+    totalAmount: number
+    totalCount: number
+  }
+  updateSettings: (settings: AppSettings) => void
+  updateContent: (content: SiteContent) => void
+  updateAppearance: (appearance: AppearanceSettings) => void
+  reviewSubmission: (id: string, action: 'approved' | 'rejected', note: string, pricing?: { market: number; our: number; stock: number }) => void
+  submitProduct: (payload: { productName: string; category: string; qty: number; note: string; submittedBy: string; schoolName: string }) => void
+}
+
+const defaultCategories: StoreCategory[] = [
+  { id: 'cat-skincare', name: 'مراقبت از پوست', slug: 'skincare', icon: '🧴', order: 0, active: true },
+  { id: 'cat-makeup', name: 'آرایشی', slug: 'makeup', icon: '💄', order: 1, active: true },
+  { id: 'cat-hygiene', name: 'بهداشتی', slug: 'hygiene', icon: '🧼', order: 2, active: true },
+  { id: 'cat-supplement', name: 'دارو و مکمل', slug: 'supplement', icon: '💊', order: 3, active: true },
+  { id: 'cat-haircare', name: 'مراقبت از مو', slug: 'haircare', icon: '💇', order: 4, active: true },
+]
+
+const defaultProducts: StoreProduct[] = [
+  { id: 'p1', name: 'کرم مرطوب‌کننده لورال ۵۰ میلی', sku: 'LRL-50ML', category: 'مراقبت از پوست', unit: 'عدد', packQty: '۵۰ میلی', marketPrice: 320000, ourPrice: 195000, stock: 340, featured: true, active: true, desc: 'کرم مرطوب‌کننده مناسب پوست خشک و حساس', tags: ['مراقبت پوست', 'پرمصرف'], createdAt: '2026-01-01T00:00:00.000Z' },
+  { id: 'p2', name: 'سرم ویتامین C اوردینری ۳۰ میلی', sku: 'ODN-VC30', category: 'مراقبت از پوست', unit: 'عدد', packQty: '۳۰ میلی', marketPrice: 450000, ourPrice: 280000, stock: 180, featured: false, active: true, desc: 'سرم روشن‌کننده و ضدلک با ویتامین C', tags: ['سرم', 'ضدلک'], createdAt: '2026-01-02T00:00:00.000Z' },
+  { id: 'p3', name: 'روغن آرگان مراکشی ۱۰۰ میلی', sku: 'ARG-100', category: 'مراقبت از مو', unit: 'عدد', packQty: '۱۰۰ میلی', marketPrice: 380000, ourPrice: 210000, stock: 75, featured: true, active: true, desc: 'روغن آرگان خالص برای تقویت مو و پوست', tags: ['مو', 'طبیعی'], createdAt: '2026-01-03T00:00:00.000Z' },
+  { id: 'p4', name: 'مکمل omega-3 کپسول ۶۰ عددی', sku: 'OMG-60', category: 'دارو و مکمل', unit: 'قوطی', packQty: '۶۰ کپسول', marketPrice: 280000, ourPrice: 150000, stock: 120, featured: false, active: true, desc: 'مکمل امگا ۳ خالص برای سلامت قلب و مغز', tags: ['مکمل', 'خوراکی'], createdAt: '2026-01-04T00:00:00.000Z' },
+  { id: 'p5', name: 'رژلب مک گلر شماره ۱۲', sku: 'MAC-LP12', category: 'آرایشی', unit: 'عدد', packQty: 'تکی', marketPrice: 250000, ourPrice: 140000, stock: 60, featured: false, active: true, desc: 'رژلب مات با دوام بالا و رنگ ثابت', tags: ['آرایشی', 'رژلب'], createdAt: '2026-01-05T00:00:00.000Z' },
+  { id: 'p6', name: 'شامپو ضدشوره هد اند شولدر ۵۰۰ میلی', sku: 'HNS-500', category: 'بهداشتی', unit: 'عدد', packQty: '۵۰۰ میلی', marketPrice: 180000, ourPrice: 95000, stock: 200, featured: true, active: true, desc: 'شامپو ضدشوره مناسب همه انواع مو', tags: ['بهداشتی', 'شامپو'], createdAt: '2026-01-06T00:00:00.000Z' },
+  { id: 'p7', name: 'ضدآفتاب اسپفا ۵۰ سون فلایر ۵۰ میلی', sku: 'SNF-SPF50', category: 'مراقبت از پوست', unit: 'عدد', packQty: '۵۰ میلی', marketPrice: 350000, ourPrice: 220000, stock: 150, featured: true, active: true, desc: 'ضدآفتاب سبک با SPF 50 مناسب پوست چرب', tags: ['ضدآفتاب', 'پرمصرف'], createdAt: '2026-01-07T00:00:00.000Z' },
+  { id: 'p8', name: 'ماسک صورت هیدروژل آلوئه‌ورا', sku: 'Msk-Alo', category: 'مراقبت از پوست', unit: 'بسته', packQty: '۵ عدد', marketPrice: 200000, ourPrice: 110000, stock: 80, featured: false, active: true, desc: 'ماسک هیدروژل آبرسان با عصاره آلوئه‌ورا', tags: ['ماسک', 'آبرسان'], createdAt: '2026-01-08T00:00:00.000Z' },
+]
+
+const defaultContent: SiteContent = {
+  storeName: 'درمابازار',
+  slogan: 'فروشگاه آنلاین محصولات مراقبت از پوست، آرایشی و مکمل',
+  heroTitle: 'خرید آنلاین محصولات مراقبت از پوست',
+  heroSubtitle: 'و آرایشی و مکمل با قیمت مناسب',
+  heroText: 'درمابازار منبع مطمئن تأمین محصولات مراقبت از پوست، آرایشی، بهداشتی و مکمل است. محصولات اصل را با قیمت مناسب کشف کنید و سفارش خود را مستقیم ثبت کنید.',
+  heroBadgeShow: true,
+  heroBadgeText: '۲۰ تا ۴۰٪ ارزان‌تر از بازار',
+  heroButton1Text: 'مشاهده محصولات',
+  heroButton2Text: 'ثبت‌نام',
+  heroShow: true,
+  features: [
+    { id: 'f1', icon: 'TrendingDown', title: '۲۰-۴۰٪ ارزان‌تر', desc: 'از قیمت بازار', show: true },
+    { id: 'f2', icon: 'ShieldCheck', title: 'اصالت کالا', desc: 'تضمین محصول اصل', show: true },
+    { id: 'f3', icon: 'Truck', title: 'ارسال سریع', desc: 'به سراسر کشور', show: true },
+    { id: 'f4', icon: 'Clock', title: 'پشتیبانی', desc: 'پاسخگویی سریع', show: true },
+  ],
+  featuresShow: true,
+  footerText: 'فروشگاه آنلاین محصولات مراقبت از پوست، آرایشی، بهداشتی و مکمل با قیمت مناسب و تضمین اصالت کالا.',
+  footerShow: true,
+  priceDisclaimer: 'قیمت‌ها تقریبی است و ممکن است تغییر کند. ما تلاش می‌کنیم همیشه شفاف و صادق باشیم.',
+  priceDisclaimerShow: true,
+}
+
+export const defaultAppearance: AppearanceSettings = {
+  brandColor: '#0f766e',
+  heroBgColor: '#0f766e',
+  buttonColor: '#0f766e',
+  logo: undefined,
+  showHeaderSearch: true,
+  showBundles: true,
+  showMarketPrice: true,
 }
 
 const defaultSettings: AppSettings = {
-  storeName: 'مدرسه یار',
-  slogan: 'تأمین لوازم مدرسه با قیمت زیر بازار',
-  supportPhone: '۰۲۱-۹۱۰۰۰۰۰۰',
-  cities: 'تهران، کرج، اصفهان، شیراز، مشهد، تبریز',
-  minOrderAmount: 500000,
-  showMarketPrice: true,
-  defaultDiscountPercent: 40,
-  deliverySlots: ['صبح (۸-۱۲)', 'ظهر (۱۲-۱۶)', 'عصر (۱۶-۲۰)'],
-  priceDisclaimer: 'قیمت بازار تقریبی است و ممکن است کمی متفاوت باشد.',
-  allowSchoolSubmissions: true,
+  storeName: 'درمابازار', slogan: 'فروشگاه آنلاین محصولات مراقبت از پوست، آرایشی و مکمل', supportPhone: '021-91000000', cities: 'تهران، کرج، اصفهان، شیراز، مشهد، تبریز، اهواز، رشت', minOrderAmount: 200000, defaultDiscountPercent: 30, showMarketPrice: true, allowSchoolSubmissions: true, deliverySlots: ['صبح (۸-۱۲)', 'ظهر (۱۲-۱۶)'], priceDisclaimer: 'قیمت‌ها تقریبی است و ممکن است تغییر کند.',
 }
 
-const seedProducts: StoreProduct[] = [
-  { id: 'p1', name: 'دستمال کاغذی جعبه‌ای', sku: 'TIS-001', category: 'بهداشتی', unit: 'جعبه', packQty: '۲۴ عددی', marketPrice: 120000, ourPrice: 65000, stock: 200, featured: true, desc: 'دستمال کاغذی جعبه‌ای ۲۰۰ برگ', tags: ['بهداشتی', 'پرمصرف'] },
-  { id: 'p2', name: 'صابون توالت بسته‌ای', sku: 'SOAP-002', category: 'بهداشتی', unit: 'بسته', packQty: '۱۲ عددی', marketPrice: 90000, ourPrice: 48000, stock: 150, featured: false, desc: 'صابون توالت معطر', tags: ['بهداشتی'] },
-  { id: 'p3', name: 'کاغذ A4 پک ۵۰۰ برگ', sku: 'PAP-003', category: 'کاغذی', unit: 'پک', packQty: '۵۰۰ برگ', marketPrice: 350000, ourPrice: 180000, stock: 80, featured: true, desc: 'کاغذ A4 ۸۰ گرم', tags: ['کاغذی', 'اداری'] },
-  { id: 'p4', name: 'پاک‌کن کلاس', sku: 'ERS-004', category: 'نوشت‌افزار', unit: 'عدد', packQty: 'تکی', marketPrice: 15000, ourPrice: 8000, stock: 3, featured: false, desc: 'پاک‌کن سفید', tags: ['نوشت‌افزار'] },
-  { id: 'p5', name: 'ماژیک سبید تخته', sku: 'MAR-005', category: 'نوشت‌افزار', unit: 'عدد', packQty: 'تکی', marketPrice: 25000, ourPrice: 13000, stock: 120, featured: false, desc: 'ماژیک سبید تخته', tags: ['نوشت‌افزار'] },
-]
+interface StoredStoreData {
+  products?: StoreProduct[]
+  categories?: StoreCategory[]
+  stockMoves?: StockMove[]
+  invoices?: Invoice[]
+  submissions?: Submission[]
+  settings?: AppSettings
+  content?: SiteContent
+  appearance?: AppearanceSettings
+}
 
-const seedInvoices: Invoice[] = [
-  {
-    id: 'inv1', number: 'INV-1405-0001', type: 'sale', status: 'posted',
-    date: new Date().toISOString(), party: 'دبیرستان شهید بهشتی',
-    items: [
-      { productId: 'p1', name: 'دستمال کاغذی جعبه‌ای', qty: 10, unitPrice: 65000, marketPrice: 120000 },
-      { productId: 'p3', name: 'کاغذ A4 پک ۵۰۰ برگ', qty: 5, unitPrice: 180000, marketPrice: 350000 },
-    ],
-    total: 1550000, marketTotal: 2950000, savedAmount: 1400000, note: 'فاکتور فروش نمونه', orderId: null,
+function readStored(): StoredStoreData {
+  try {
+    const raw = localStorage.getItem('dermabazar-v1')
+    return raw ? JSON.parse(raw) as StoredStoreData : {}
+  } catch {
+    return {}
+  }
+}
+
+function persistStore(partial: StoredStoreData) {
+  try {
+    const current = readStored()
+    localStorage.setItem('dermabazar-v1', JSON.stringify({ ...current, ...partial }))
+    window.dispatchEvent(new Event('dermabazar-products-changed'))
+  } catch { /* storage is optional in non-browser environments */ }
+}
+
+const stored = readStored()
+const initialProducts = stored.products?.length ? stored.products.map((p) => ({ ...p, active: p.active ?? true, createdAt: p.createdAt || new Date().toISOString() })) : defaultProducts
+const initialCategories = stored.categories?.length ? stored.categories.map((c) => ({ ...c, active: c.active ?? true })) : defaultCategories
+if (typeof window !== 'undefined') persistStore({ products: initialProducts, categories: initialCategories })
+
+export const useStore = create<StoreState>((set, get) => ({
+  products: initialProducts,
+  categories: initialCategories,
+  stockMoves: stored.stockMoves ?? [],
+  invoices: stored.invoices ?? [],
+  submissions: stored.submissions ?? [],
+  settings: stored.settings ?? defaultSettings,
+  content: { ...defaultContent, ...stored.content, features: stored.content?.features?.length ? stored.content.features : defaultContent.features },
+  appearance: { ...defaultAppearance, ...stored.appearance },
+
+  adjustStock: (productId, delta, reason, note) => set((s) => {
+    const product = s.products.find((p) => p.id === productId)
+    if (!product) return s
+    const products = s.products.map((p) => p.id === productId ? { ...p, stock: Math.max(0, p.stock + delta) } : p)
+    const stockMoves = [...s.stockMoves, { id: crypto.randomUUID(), delta, productName: product.name, reason, note, date: new Date().toISOString() }]
+    persistStore({ products, stockMoves })
+    return { products, stockMoves }
+  }),
+
+  createInvoice: (payload) => set((s) => {
+    const invoices = [...s.invoices, { ...payload, id: crypto.randomUUID() }]
+    persistStore({ invoices })
+    return { invoices }
+  }),
+
+  voidInvoice: (id) => set((s) => {
+    const invoices = s.invoices.map((i) => i.id === id ? { ...i, status: 'void' as const } : i)
+    persistStore({ invoices })
+    return { invoices }
+  }),
+
+  upsertProduct: (product) => set((s) => {
+    const normalized = { ...product, active: product.active ?? true, createdAt: product.createdAt || new Date().toISOString() }
+    const products = s.products.some((p) => p.id === normalized.id) ? s.products.map((p) => p.id === normalized.id ? normalized : p) : [...s.products, normalized]
+    persistStore({ products })
+    return { products }
+  }),
+
+  deleteProduct: (id) => set((s) => {
+    const products = s.products.filter((p) => p.id !== id)
+    persistStore({ products })
+    return { products }
+  }),
+
+  upsertCategory: (category) => set((s) => {
+    const exists = s.categories.some((c) => c.id === category.id)
+    const categories = exists ? s.categories.map((c) => c.id === category.id ? category : c) : [...s.categories, category].sort((a, b) => a.order - b.order)
+    persistStore({ categories })
+    return { categories }
+  }),
+
+  deleteCategory: (id) => {
+    const cat = get().categories.find((c) => c.id === id)
+    if (!cat) return false
+    const hasProducts = get().products.some((p) => p.category === cat.name)
+    if (hasProducts) return false
+    set((s) => {
+      const categories = s.categories.filter((c) => c.id !== id)
+      persistStore({ categories })
+      return { categories }
+    })
+    return true
   },
-]
 
-const seedSubmissions: Submission[] = [
-  {
-    id: 'sub1', productName: 'ژل ضدعفونت دست', category: 'بهداشتی', qty: 50,
-    note: 'برای اتاق بهداشت مدرسه نیاز داریم', status: 'pending',
-    submittedBy: 'school1', schoolName: 'دبیرستان شهید بهشتی',
-    date: new Date().toISOString(), adminNote: '',
+  productSalesStats: (productId) => {
+    const { invoices } = get()
+    const today = new Date().toDateString(); const now = new Date()
+    let todayAmount = 0, todayCount = 0, monthAmount = 0, monthCount = 0, totalAmount = 0, totalCount = 0
+    for (const inv of invoices) {
+      if (inv.type !== 'sale' || inv.status !== 'posted') continue
+      const invDate = new Date(inv.date)
+      for (const it of inv.items) if (it.productId === productId) {
+        const lineTotal = it.qty * it.unitPrice; totalAmount += lineTotal; totalCount += it.qty
+        if (invDate.toDateString() === today) { todayAmount += lineTotal; todayCount += it.qty }
+        if (invDate.getMonth() === now.getMonth() && invDate.getFullYear() === now.getFullYear()) { monthAmount += lineTotal; monthCount += it.qty }
+      }
+    }
+    return { todayAmount, todayCount, monthAmount, monthCount, totalAmount, totalCount }
   },
-]
 
-function isSameDay(iso: string): boolean {
-  const d = new Date(iso); const t = new Date()
-  return d.getFullYear() === t.getFullYear() && d.getMonth() === t.getMonth() && d.getDate() === t.getDate()
+  updateSettings: (settings) => { persistStore({ settings }); set({ settings }) },
+
+  updateContent: (content) => { persistStore({ content }); set({ content }) },
+
+  updateAppearance: (appearance) => { persistStore({ appearance }); set({ appearance }) },
+
+  reviewSubmission: (id, action, note, pricing) => set((s) => {
+    const submissions = s.submissions.map((sub) => sub.id === id ? { ...sub, status: action, adminNote: note } : sub)
+    let products = s.products
+    if (action === 'approved' && pricing) {
+      const sub = s.submissions.find((x) => x.id === id)
+      if (sub) products = [...products, { id: `p${Date.now()}`, name: sub.productName, sku: '', category: sub.category, unit: 'عدد', packQty: '', marketPrice: pricing.market, ourPrice: pricing.our, stock: pricing.stock, featured: false, active: true, desc: sub.note || '', tags: [], createdAt: new Date().toISOString() }]
+    }
+    persistStore({ submissions, products }); return { submissions, products }
+  }),
+
+  submitProduct: (payload) => set((s) => {
+    const submissions = [...s.submissions, { id: crypto.randomUUID(), status: 'pending' as const, productName: payload.productName, category: payload.category, qty: payload.qty, schoolName: payload.schoolName, submittedBy: payload.submittedBy, date: new Date().toISOString(), note: payload.note, adminNote: '' }]
+    persistStore({ submissions }); return { submissions }
+  }),
+}))
+
+export function productSlug(product: StoreProduct): string {
+  return `${product.id}-${product.name.replace(/\s+/g, '-')}`
 }
 
-function isSameJalaliMonth(iso: string): boolean {
-  const d = toJalaliDate(new Date(iso)); const t = toJalaliDate(new Date())
-  return d.year === t.year && d.month === t.month
+export function toProduct(product: StoreProduct) {
+  return {
+    id: product.id, sku: product.sku || null, name: product.name, slug: productSlug(product), image: product.image, short_desc: product.desc, long_desc: product.desc, category_id: product.category, brand: null, unit: product.unit, pack_size: product.packQty, market_price: product.marketPrice, our_price: product.ourPrice, min_order_qty: 1, step_qty: 1, max_order_qty: Math.max(product.stock, 1), stock_qty: product.stock, low_stock_threshold: 5, is_active: product.active, is_featured: product.featured, is_hygiene: product.category === 'بهداشتی', suitable_for: [], specs: {}, weight_grams: 0, created_at: product.createdAt, updated_at: product.createdAt,
+  }
 }
-
-export const useStore = create<StoreState>()(
-  persist(
-    (set, get) => ({
-      settings: defaultSettings,
-      products: seedProducts,
-      stockMoves: [],
-      invoices: seedInvoices,
-      submissions: seedSubmissions,
-
-      updateSettings: (s) => set((st) => ({ settings: { ...st.settings, ...s } })),
-
-      upsertProduct: (p) => set((st) => {
-        const idx = st.products.findIndex((x) => x.id === p.id)
-        if (idx >= 0) {
-          const products = [...st.products]; products[idx] = p
-          return { products }
-        }
-        return { products: [{ ...p, id: p.id || `p${Date.now()}` }, ...st.products] }
-      }),
-
-      deleteProduct: (id) => set((st) => ({ products: st.products.filter((p) => p.id !== id) })),
-
-      adjustStock: (productId, delta, reason, note) => {
-        const st = get()
-        const product = st.products.find((p) => p.id === productId)
-        if (!product) return
-        const newStock = Math.max(0, product.stock + delta)
-        set((s) => ({
-          products: s.products.map((p) => p.id === productId ? { ...p, stock: newStock } : p),
-          stockMoves: [{ id: `sm${Date.now()}`, productId, productName: product.name, delta, reason, date: new Date().toISOString(), note }, ...s.stockMoves],
-        }))
-      },
-
-      createInvoice: (inv) => {
-        const number = `INV-${todayJalaliShort().replace(/\//g, '')}-${String(get().invoices.length + 1).padStart(4, '0')}`
-        const invoice: Invoice = { ...inv, id: `inv${Date.now()}`, number }
-        set((st) => ({ invoices: [invoice, ...st.invoices] }))
-        if (invoice.type === 'purchase' && invoice.status === 'posted') {
-          invoice.items.forEach((it) => {
-            get().adjustStock(it.productId, it.qty, 'invoice_in', `فاکتور خرید ${number}`)
-          })
-        }
-        if (invoice.type === 'sale' && invoice.status === 'posted') {
-          invoice.items.forEach((it) => {
-            get().adjustStock(it.productId, -it.qty, 'invoice_out', `فاکتور فروش ${number}`)
-          })
-        }
-        return invoice
-      },
-
-      voidInvoice: (id) => set((st) => ({
-        invoices: st.invoices.map((i) => i.id === id ? { ...i, status: 'void' } : i),
-      })),
-
-      productSalesStats: (productId) => {
-        const st = get()
-        let todayCount = 0, todayAmount = 0, monthCount = 0, monthAmount = 0, totalCount = 0, totalAmount = 0
-        const validOrderStatuses = ['confirmed', 'packing', 'shipped', 'delivered']
-        st.invoices.filter((i) => i.type === 'sale' && i.status === 'posted').forEach((inv) => {
-          inv.items.filter((it) => it.productId === productId).forEach((it) => {
-            const amt = it.qty * it.unitPrice
-            if (isSameDay(inv.date)) { todayCount += it.qty; todayAmount += amt }
-            if (isSameJalaliMonth(inv.date)) { monthCount += it.qty; monthAmount += amt }
-            totalCount += it.qty; totalAmount += amt
-          })
-        })
-        return { todayCount, todayAmount, monthCount, monthAmount, totalCount, totalAmount }
-      },
-
-      submitProduct: (s) => set((st) => ({
-        submissions: [{ ...s, id: `sub${Date.now()}`, status: 'pending', date: new Date().toISOString(), adminNote: '' }, ...st.submissions],
-      })),
-
-      reviewSubmission: (id, action, note, prices) => set((st) => {
-        const submissions = st.submissions.map((s) => s.id === id ? { ...s, status: action, adminNote: note } : s)
-        let products = st.products
-        if (action === 'approved' && prices) {
-          const sub = st.submissions.find((s) => s.id === id)
-          if (sub) {
-            const newProd: StoreProduct = {
-              id: `p${Date.now()}`, name: sub.productName, sku: `NEW-${Date.now().toString().slice(-4)}`,
-              category: sub.category, unit: 'عدد', packQty: 'تکی',
-              marketPrice: prices.market, ourPrice: prices.our, stock: prices.stock,
-              featured: false, desc: sub.note, tags: [sub.category],
-            }
-            products = [newProd, ...products]
-          }
-        }
-        return { submissions, products }
-      }),
-    }),
-    { name: 'madrese-yar-v1' },
-  ),
-)

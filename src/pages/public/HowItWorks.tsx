@@ -7,14 +7,14 @@ export default function HowItWorks() {
     { icon: Search, title: '۱. جستجو و مقایسه', desc: 'محصولات را مرور کنید، قیمت بازار را با قیمت ما مقایسه کنید و صرفه‌جویی هر محصول را ببینید.' },
     { icon: ShoppingCart, title: '۲. ثبت سفارش', desc: 'محصولات را به سبد اضافه کنید، آدرس تحویل و روش پرداخت را انتخاب کنید و سفارش ثبت کنید.' },
     { icon: CheckCircle2, title: '۳. تأیید و بسته‌بندی', desc: 'فروشنده سفارش را تأیید می‌کند و وضعیت را از پیش‌نویس تا تحویل به‌روز می‌کند.' },
-    { icon: Truck, title: '۴. تحویل', desc: 'سفارش در محل مدرسه تحویل داده می‌شود. فاکتور قابل چاپ دریافت می‌کنید.' },
+    { icon: Truck, title: '۴. تحویل', desc: 'سفارش در محل شما تحویل داده می‌شود. فاکتور قابل چاپ دریافت می‌کنید.' },
   ]
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-6">
       <Breadcrumbs items={[{ label: 'خانه', to: '/' }, { label: 'چگونه کار می‌کند' }]} />
       <h1 className="text-2xl font-extrabold text-gray-800 mb-2">چگونه کار می‌کند؟</h1>
-      <p className="text-gray-500 mb-8">مدرسه یار راه ساده و شفافی برای تأمین لوازم مدرسه دارد</p>
+      <p className="text-gray-500 mb-8">درمابازار راه ساده و شفافی برای خرید محصولات مراقبت از پوست و آرایشی دارد</p>
 
       <div className="space-y-4">
         {steps.map((s, i) => (
@@ -33,7 +33,7 @@ export default function HowItWorks() {
       <div className="mt-8 card p-6 bg-primary-700 text-white text-center">
         <h3 className="text-xl font-bold mb-2">آماده شروع هستید؟</h3>
         <p className="text-primary-100 mb-4">همین حالا ثبت‌نام کنید و از قیمت‌های زیر بازار بهره‌مند شوید</p>
-        <Link to="/register" className="btn bg-white text-primary-700 hover:bg-primary-50 px-6 py-3">ثبت‌نام مدرسه</Link>
+        <Link to="/register" className="btn bg-white text-primary-700 hover:bg-primary-50 px-6 py-3">ثبت‌نام</Link>
       </div>
     </div>
   )

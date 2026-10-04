@@ -1,44 +1,66 @@
-import { useState } from 'react'
-import { Plus, Search, Edit, Trash2, Package, X, Save } from 'lucide-react'
+import { useState, type ChangeEvent } from 'react'
+import { Plus, Search, Edit, Trash2, Package, X, Save, Eye, EyeOff } from 'lucide-react'
 import { useStore, type StoreProduct } from '../../lib/store'
 import { useToast } from '../../lib/toast'
 import { formatTomanShort, formatNumber } from '../../lib/format'
 import { EmptyState } from '../../lib/ui'
-
-const categories = ['بهداشتی', 'کاغذی', 'نوشت‌افزار', 'اداری', 'پلاستیک', 'سایر']
+import ProductImage from '../../components/ProductImage'
 
 export default function AdminProducts() {
-  const { products, upsertProduct, deleteProduct, adjustStock } = useStore()
+  const { products, categories, upsertProduct, deleteProduct, adjustStock } = useStore()
   const { toast } = useToast()
   const [search, setSearch] = useState('')
   const [filterCat, setFilterCat] = useState('')
   const [editing, setEditing] = useState<StoreProduct | null>(null)
   const [showForm, setShowForm] = useState(false)
 
+  const activeCategoryNames = categories.filter((c) => c.active).map((c) => c.name)
   const filtered = products.filter((p) => (!filterCat || p.category === filterCat) && (!search || p.name.includes(search) || p.sku.includes(search)))
 
   const openNew = () => {
-    setEditing({ id: '', name: '', sku: '', category: 'بهداشتی', unit: 'عدد', packQty: '', marketPrice: 0, ourPrice: 0, stock: 0, featured: false, desc: '', tags: [] })
+    setEditing({ id: '', name: '', sku: '', category: activeCategoryNames[0] ?? '', unit: 'عدد', packQty: '', marketPrice: 0, ourPrice: 0, stock: 0, featured: false, active: true, desc: '', tags: [], createdAt: '' })
     setShowForm(true)
   }
 
-  const openEdit = (p: StoreProduct) => {
-    setEditing({ ...p })
-    setShowForm(true)
+  const handleImageFile = (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+      toast('error', 'فقط عکس‌های JPG، PNG یا WEBP قابل قبول هستند')
+      event.target.value = ''
+      return
+    }
+    if (file.size > 400 * 1024) {
+      toast('error', 'حجم عکس باید حداکثر ۴۰۰ کیلوبایت باشد')
+      event.target.value = ''
+      return
+    }
+    const reader = new FileReader()
+    reader.onload = () => {
+      const result = reader.result
+      if (typeof result === 'string') setEditing((current) => current ? { ...current, image: result } : current)
+    }
+    reader.readAsDataURL(file)
   }
+
+  const openEdit = (p: StoreProduct) => { setEditing({ ...p }); setShowForm(true) }
 
   const save = () => {
     if (!editing || !editing.name.trim()) return
     upsertProduct({ ...editing, id: editing.id || `p${Date.now()}` })
     toast('success', 'کالا ذخیره شد')
-    setShowForm(false)
-    setEditing(null)
+    setShowForm(false); setEditing(null)
   }
 
   const del = (p: StoreProduct) => {
     if (!confirm(`حذف "${p.name}"؟`)) return
     deleteProduct(p.id)
     toast('success', 'کالا حذف شد')
+  }
+
+  const toggleActive = (p: StoreProduct) => {
+    upsertProduct({ ...p, active: !p.active })
+    toast('success', p.active ? 'کالا غیرفعال شد' : 'کالا فعال شد')
   }
 
   const quickStock = (p: StoreProduct, delta: number) => {
@@ -60,7 +82,7 @@ export default function AdminProducts() {
         </div>
         <select value={filterCat} onChange={(e) => setFilterCat(e.target.value)} className="input py-2.5 text-sm w-auto">
           <option value="">همه دسته‌ها</option>
-          {categories.map((c) => <option key={c} value={c}>{c}</option>)}
+          {categories.map((c) => <option key={c.id} value={c.name}>{c.name}</option>)}
         </select>
       </div>
 
@@ -77,6 +99,7 @@ export default function AdminProducts() {
                 <th className="px-4 py-3 text-right font-medium">قیمت بازار</th>
                 <th className="px-4 py-3 text-right font-medium">قیمت فروش</th>
                 <th className="px-4 py-3 text-right font-medium">موجودی</th>
+                <th className="px-4 py-3 text-right font-medium">وضعیت</th>
                 <th className="px-4 py-3 text-right font-medium">عملیات</th>
               </tr>
             </thead>
@@ -94,6 +117,11 @@ export default function AdminProducts() {
                       <button onClick={() => quickStock(p, 1)} className="btn-ghost p-0.5 text-xs">+</button>
                       <button onClick={() => quickStock(p, -1)} className="btn-ghost p-0.5 text-xs">−</button>
                     </div>
+                  </td>
+                  <td className="px-4 py-3">
+                    <button onClick={() => toggleActive(p)} className={p.active ? 'text-success-600' : 'text-gray-400'} title={p.active ? 'فعال' : 'غیرفعال'}>
+                      {p.active ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+                    </button>
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex gap-1">
@@ -121,7 +149,7 @@ export default function AdminProducts() {
                 <div><label className="label">SKU</label><input value={editing.sku} onChange={(e) => setEditing({ ...editing, sku: e.target.value })} className="input" dir="ltr" /></div>
                 <div><label className="label">دسته</label>
                   <select value={editing.category} onChange={(e) => setEditing({ ...editing, category: e.target.value })} className="input">
-                    {categories.map((c) => <option key={c} value={c}>{c}</option>)}
+                    {activeCategoryNames.map((c) => <option key={c} value={c}>{c}</option>)}
                   </select>
                 </div>
                 <div><label className="label">واحد</label><input value={editing.unit} onChange={(e) => setEditing({ ...editing, unit: e.target.value })} className="input" /></div>
@@ -130,9 +158,22 @@ export default function AdminProducts() {
                 <div><label className="label">قیمت فروش (ریال)</label><input type="number" value={editing.ourPrice} onChange={(e) => setEditing({ ...editing, ourPrice: Number(e.target.value) })} className="input" dir="ltr" /></div>
                 <div><label className="label">موجودی اولیه</label><input type="number" value={editing.stock} onChange={(e) => setEditing({ ...editing, stock: Number(e.target.value) })} className="input" dir="ltr" /></div>
               </div>
+              <div className="space-y-2">
+                <label className="label">عکس کالا</label>
+                <input value={editing.image ?? ''} onChange={(e) => setEditing({ ...editing, image: e.target.value || undefined })} placeholder="لینک عکس (imageUrl)" className="input" dir="ltr" />
+                <div className="flex items-center gap-3">
+                  <label className="btn-secondary cursor-pointer py-2 px-3 text-sm">
+                    آپلود عکس
+                    <input type="file" accept="image/jpeg,image/png,image/webp" onChange={handleImageFile} className="hidden" />
+                  </label>
+                  <span className="text-xs text-gray-400">JPG، PNG یا WEBP تا ۴۰۰KB</span>
+                </div>
+                {editing.image && <div className="flex items-center gap-3 rounded-xl border border-gray-200 p-2"><ProductImage src={editing.image} name={editing.name} className="h-20 w-20 rounded-lg" /><button type="button" onClick={() => setEditing({ ...editing, image: undefined })} className="btn-ghost text-error-600 text-sm">حذف عکس</button></div>}
+              </div>
               <div><label className="label">توضیحات</label><textarea value={editing.desc} onChange={(e) => setEditing({ ...editing, desc: e.target.value })} className="input min-h-[60px]" /></div>
               <div><label className="label">تگ‌ها (با کاما جدا کنید)</label><input value={editing.tags.join(', ')} onChange={(e) => setEditing({ ...editing, tags: e.target.value.split(',').map((t) => t.trim()).filter(Boolean) })} className="input" /></div>
               <label className="flex items-center gap-2 cursor-pointer"><input type="checkbox" checked={editing.featured} onChange={(e) => setEditing({ ...editing, featured: e.target.checked })} className="w-4 h-4 rounded text-primary-600" /><span className="text-sm">کالای ویژه</span></label>
+              <label className="flex items-center gap-2 cursor-pointer"><input type="checkbox" checked={editing.active} onChange={(e) => setEditing({ ...editing, active: e.target.checked })} className="w-4 h-4 rounded text-primary-600" /><span className="text-sm">فعال (در فروشگاه نمایش داده شود)</span></label>
               <button onClick={save} className="btn-primary w-full py-3"><Save className="w-4 h-4" /> ذخیره</button>
             </div>
           </div>

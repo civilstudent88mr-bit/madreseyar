@@ -29,7 +29,7 @@ export default function AdminDashboard() {
     { icon: TrendingUp, label: 'فروش این ماه شمسی', value: `${formatTomanShort(monthSales)} ر`, sub: `${formatNumber(monthInvoices.length)} فاکتور`, color: 'success' },
     { icon: Package, label: 'فروش کل', value: `${formatTomanShort(totalSales)} ر`, sub: `${formatNumber(invoices.filter((i) => i.type === 'sale' && i.status === 'posted').length)} فاکتور`, color: 'accent' },
     { icon: AlertTriangle, label: 'موجودی بحرانی', value: formatNumber(criticalStock.length), sub: 'کمتر از ۵ عدد', color: 'error' },
-    { icon: Inbox, label: 'کالاهای در انتظار تأیید', value: formatNumber(pendingSubs.length), sub: 'ثبت‌شده توسط مدارس', color: 'warning' },
+    { icon: Inbox, label: 'کالاهای در انتظار تأیید', value: formatNumber(pendingSubs.length), sub: 'ثبت‌شده توسط مشتریان', color: 'warning' },
   ]
 
   return (

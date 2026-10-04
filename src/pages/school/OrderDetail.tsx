@@ -53,7 +53,7 @@ export default function OrderDetail() {
 
   const cancel = async () => {
     await supabase.from('orders').update({ status: 'canceled' }).eq('id', order.id)
-    await supabase.from('order_status_history').insert({ order_id: order.id, status: 'canceled', note: 'لغو توسط مدرسه', created_by: profile?.id })
+    await supabase.from('order_status_history').insert({ order_id: order.id, status: 'canceled', note: 'لغو توسط مشتری', created_by: profile?.id })
     toast('success', 'سفارش لغو شد')
     setOrder({ ...order, status: 'canceled' })
   }
@@ -125,7 +125,7 @@ export default function OrderDetail() {
 
           <div className="card p-4 space-y-2 no-print">
             <h3 className="font-bold text-gray-800">پرداخت</h3>
-            <p className="text-sm text-gray-600">{order.payment_method === 'card_to_card' ? 'کارت به کارت' : order.payment_method === 'cash_on_delivery' ? 'پرداخت در محل' : order.payment_method === 'school_credit' ? 'اعتبار مدرسه' : '—'}</p>
+            <p className="text-sm text-gray-600">{order.payment_method === 'card_to_card' ? 'کارت به کارت' : order.payment_method === 'cash_on_delivery' ? 'پرداخت در محل' : order.payment_method === 'school_credit' ? 'اعتبار حساب' : '—'}</p>
             <p className="text-sm"><span className="text-gray-500">وضعیت: </span><span className={order.payment_status === 'paid' ? 'text-success-600 font-bold' : 'text-warning-600'}>{order.payment_status === 'paid' ? 'پرداخت شده' : order.payment_status === 'pending_receipt' ? 'در انتظار فیش' : 'پرداخت نشده'}</span></p>
           </div>
 

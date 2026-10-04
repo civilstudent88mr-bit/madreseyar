@@ -7,6 +7,6 @@ export const supabase = createClient(url, anonKey, {
   auth: {
     persistSession: true,
     autoRefreshToken: true,
-    storageKey: 'madrese-yar-auth',
+    storageKey: 'dermabazar-auth',
   },
 })

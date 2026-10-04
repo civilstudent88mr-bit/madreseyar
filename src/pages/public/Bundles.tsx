@@ -20,8 +20,8 @@ export default function Bundles() {
   return (
     <div className="max-w-7xl mx-auto px-4 py-6">
       <Breadcrumbs items={[{ label: 'خانه', to: '/' }, { label: 'پکیج‌های پیشنهادی' }]} />
-      <h1 className="text-2xl font-extrabold text-gray-800 mb-2">پکیج‌های پیشنهادی مدارس</h1>
-      <p className="text-gray-500 mb-6">مجموعه‌های آماده برای نیازهای رایج مدارس با تخفیف اضافی</p>
+      <h1 className="text-2xl font-extrabold text-gray-800 mb-2">پکیج‌های پیشنهادی</h1>
+      <p className="text-gray-500 mb-6">مجموعه‌های آماده برای نیازهای رایج با تخفیف اضافی</p>
 
       {loading ? (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

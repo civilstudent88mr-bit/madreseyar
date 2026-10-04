@@ -1,9 +1,11 @@
 import { create } from 'zustand'
 import type { Product, Bundle } from './types'
 
+export type CartProduct = Product & { image?: string }
+
 export interface CartLine {
   id: string
-  product?: Product
+  product?: CartProduct
   bundle?: Bundle
   qty: number
 }
@@ -12,7 +14,7 @@ interface CartState {
   lines: CartLine[]
   hydrated: boolean
   setLines: (lines: CartLine[]) => void
-  addProduct: (product: Product, qty?: number) => void
+  addProduct: (product: CartProduct, qty?: number) => void
   addBundle: (bundle: Bundle, qty?: number) => void
   updateQty: (id: string, qty: number) => void
   remove: (id: string) => void

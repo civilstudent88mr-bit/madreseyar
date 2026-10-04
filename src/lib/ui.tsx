@@ -33,7 +33,7 @@ export const paymentMethodLabels: Record<string, string> = {
   card_to_card: 'کارت به کارت',
   online: 'پرداخت آنلاین',
   cash_on_delivery: 'پرداخت در محل',
-  school_credit: 'اعتبار مدرسه',
+  school_credit: 'اعتبار حساب',
 }
 
 export function StatusChip({ status }: { status: string }) {

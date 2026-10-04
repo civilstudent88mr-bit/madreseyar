@@ -23,7 +23,7 @@ export default function Contact() {
           {[
             { icon: Phone, title: 'تلفن تماس', value: '۰۲۱-۹۱۰۰۰۰۰۰' },
             { icon: MessageCircle, title: 'واتساپ', value: '۰۹۱۲۰۰۰۰۰۰۰' },
-            { icon: Mail, title: 'ایمیل', value: 'info@madrese-yar.ir' },
+            { icon: Mail, title: 'ایمیل', value: 'info@dermabazar.ir' },
             { icon: MapPin, title: 'آدرس', value: 'تهران، خیابان ولیعصر، پلاک ۱۲۰' },
           ].map((c, i) => (
             <div key={i} className="card p-4 flex items-center gap-4">
@@ -44,8 +44,8 @@ export default function Contact() {
             <input required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="input" placeholder="نام شما" />
           </div>
           <div>
-            <label className="label">نام مدرسه</label>
-            <input value={form.school} onChange={(e) => setForm({ ...form, school: e.target.value })} className="input" placeholder="نام مدرسه" />
+            <label className="label">نام مرکز</label>
+            <input value={form.school} onChange={(e) => setForm({ ...form, school: e.target.value })} className="input" placeholder="نام داروخانه/مرکز" />
           </div>
           <div>
             <label className="label">شماره تماس</label>

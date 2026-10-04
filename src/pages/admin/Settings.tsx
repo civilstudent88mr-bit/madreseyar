@@ -37,7 +37,7 @@ export default function AdminSettings() {
         </label>
         <label className="flex items-center gap-2 cursor-pointer">
           <input type="checkbox" checked={form.allowSchoolSubmissions} onChange={(e) => set('allowSchoolSubmissions', e.target.checked)} className="w-4 h-4 rounded text-primary-600" />
-          <span className="text-sm text-gray-700">فعال بودن ثبت کالای پیشنهادی توسط مدیر مدرسه</span>
+          <span className="text-sm text-gray-700">فعال بودن ثبت کالای پیشنهادی توسط مشتری</span>
         </label>
       </div>
 

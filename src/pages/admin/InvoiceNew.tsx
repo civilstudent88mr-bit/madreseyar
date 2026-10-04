@@ -21,7 +21,7 @@ export default function AdminInvoiceNew() {
     const p = products.find((x) => x.id === selProduct)
     if (!p) return
     if (items.find((it) => it.productId === p.id)) { toast('error', 'این کالا قبلاً اضافه شده'); return }
-    setItems([...items, { productId: p.id, name: p.name, qty: 1, unitPrice: type === 'purchase' ? p.ourPrice : p.ourPrice, marketPrice: p.marketPrice }])
+    setItems([...items, { productId: p.id, name: p.name, image: p.image, qty: 1, unitPrice: type === 'purchase' ? p.ourPrice : p.ourPrice, marketPrice: p.marketPrice }])
     setSelProduct('')
   }
 
@@ -39,7 +39,8 @@ export default function AdminInvoiceNew() {
   const save = (status: 'draft' | 'posted') => {
     if (!party.trim()) { toast('error', 'نام طرف را وارد کنید'); return }
     if (items.length === 0) { toast('error', 'حداقل یک قلم اضافه کنید'); return }
-    createInvoice({ type, status, date: new Date().toISOString(), party, items, total, marketTotal, savedAmount: saved, note, orderId: null })
+    const number = `${type === 'purchase' ? 'PUR' : 'SAL'}-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}-${Math.floor(Math.random() * 9000 + 1000)}`
+    createInvoice({ type, status, number, date: new Date().toISOString(), party, items, total, marketTotal, savedAmount: saved, note, orderId: null })
     toast('success', status === 'posted' ? 'فاکتور ثبت شد' : 'پیش‌نویس ذخیره شد')
     navigate('/admin/invoices')
   }
@@ -59,7 +60,7 @@ export default function AdminInvoiceNew() {
               <option value="sale">فروش</option>
             </select>
           </div>
-          <div><label className="label">{type === 'purchase' ? 'تأمین‌کننده' : 'مشتری'}</label><input value={party} onChange={(e) => setParty(e.target.value)} className="input" placeholder={type === 'purchase' ? 'نام تأمین‌کننده' : 'نام مشتری/مدرسه'} /></div>
+          <div><label className="label">{type === 'purchase' ? 'تأمین‌کننده' : 'مشتری'}</label><input value={party} onChange={(e) => setParty(e.target.value)} className="input" placeholder={type === 'purchase' ? 'نام تأمین‌کننده' : 'نام مشتری'} /></div>
         </div>
 
         <div>
