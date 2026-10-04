@@ -1,4 +1,4 @@
-const { createClient } = require('@supabase/supabase-js')
+import { createClient } from '@supabase/supabase-js'
 const categories = ['skincare', 'sunscreen', 'face-makeup', 'eye-lip-makeup', 'haircare', 'bodycare', 'personal-hygiene', 'fragrance']
 const fallbackImages = {
   skincare: 'https://images.unsplash.com/photo-1556228578-0d85b1a4d571?auto=format&fit=crop&w=900&q=80',
@@ -12,7 +12,7 @@ const fallbackImages = {
 }
 function json(res, status, body) { res.status(status).setHeader('Content-Type', 'application/json').send(JSON.stringify(body)) }
 function slugify(value) { return String(value).trim().toLowerCase().replace(/[^\p{L}\p{N}]+/gu, '-').replace(/^-+|-+$/g, '') || `product-${Date.now()}` }
-module.exports = async function handler(req, res) {
+export default async function handler(req, res) {
   if (req.method !== 'POST') return json(res, 405, { error: 'Method not allowed' })
   if (!process.env.AI_ADMIN_SECRET || !process.env.OPENAI_API_KEY || !process.env.SUPABASE_SERVICE_ROLE_KEY) return json(res, 503, { error: 'AI service is not configured in Vercel.' })
   if (req.headers['x-admin-secret'] !== process.env.AI_ADMIN_SECRET) return json(res, 401, { error: 'کلید دسترسی AI نامعتبر است' })
