@@ -243,7 +243,7 @@ export default function Login() {
 
         <div className="card p-4 mt-4 bg-accent-50 border-accent-100">
           <p className="text-xs text-accent-800 text-center leading-relaxed">
-            ورود دمو — ادمین: <span className="font-bold" dir="ltr">۰۹۱۲۰۰۰۰۰</span> / <span className="font-bold" dir="ltr">Admin1234</span>
+            ورود دمو — ادمین: <span className="font-bold" dir="ltr">۰۹۱۲۰۰۰۰۰۰۰</span> / <span className="font-bold" dir="ltr">Admin1234</span>
             <br />
             حساب: <span className="font-bold" dir="ltr">۰۹۱۲۱۱۱۱۱۱۱</span> / <span className="font-bold" dir="ltr">School123</span>
           </p>

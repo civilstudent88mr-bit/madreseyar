@@ -53,6 +53,8 @@ const AuthContext = createContext<AuthState>({
 })
 
 const STORAGE_KEY = 'healthcare-v1'
+const ADMIN_MOBILE = '09120000000'
+const ADMIN_MOBILE_ALIASES = new Set(['091200000', ADMIN_MOBILE])
 
 interface StoredData {
   users: AppUser[]
@@ -89,7 +91,7 @@ function seedDefaults(): StoredData {
       {
         id: 'admin-1',
         role: 'admin',
-        mobile: '091200000',
+        mobile: ADMIN_MOBILE,
         password: 'Admin1234',
         name: 'مدیر سیستم',
         schoolName: '',
@@ -106,11 +108,11 @@ function seedDefaults(): StoredData {
       },
     ]
     saveData(data)
-  } else if (!data.users.some((user) => user.mobile === '091200000')) {
+  } else if (!data.users.some((user) => ADMIN_MOBILE_ALIASES.has(user.mobile))) {
     data.users.push({
       id: 'admin-1',
       role: 'admin',
-      mobile: '091200000',
+      mobile: ADMIN_MOBILE,
       password: 'Admin1234',
       name: 'مدیر سیستم',
       schoolName: '',
@@ -171,7 +173,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const loginWithPassword = useCallback((mobile: string, password: string): boolean => {
     const norm = normalizeMobile(mobile)
     const data = loadData()
-    const u = data.users.find((x) => x.mobile === norm && x.password === password)
+    const u = data.users.find((x) => (x.mobile === norm || (ADMIN_MOBILE_ALIASES.has(norm) && ADMIN_MOBILE_ALIASES.has(x.mobile))) && x.password === password)
     if (!u) return false
     data.session = { userId: u.id, role: u.role }
     saveData(data)
