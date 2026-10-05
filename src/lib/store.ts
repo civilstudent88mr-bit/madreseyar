@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { supabase } from './supabase'
 
 export interface StoreProduct {
   id: string
@@ -126,6 +127,7 @@ export interface AppSettings {
 interface StoreState {
   products: StoreProduct[]
   categories: StoreCategory[]
+  syncCatalog: () => Promise<void>
   stockMoves: StockMove[]
   invoices: Invoice[]
   submissions: Submission[]
@@ -303,6 +305,40 @@ if (typeof window !== 'undefined') persistStore({ products: initialProducts, cat
 export const useStore = create<StoreState>((set, get) => ({
   products: initialProducts,
   categories: initialCategories,
+  syncCatalog: async () => {
+    const [{ data: remoteProducts, error: productsError }, { data: remoteCategories, error: categoriesError }] = await Promise.all([
+      supabase.from('products').select('*, categories(name, slug), product_images(url, sort_order)').eq('is_active', true).order('created_at', { ascending: false }),
+      supabase.from('categories').select('id, name, slug, icon, sort_order, is_active').eq('is_active', true).order('sort_order'),
+    ])
+    if (productsError || categoriesError || !remoteProducts?.length) return
+    const products = remoteProducts.map((remote: any): StoreProduct => ({
+      id: remote.id,
+      name: remote.name,
+      sku: remote.sku || '',
+      category: remote.categories?.name || 'سایر',
+      unit: remote.unit || 'عدد',
+      packQty: remote.pack_size || '',
+      marketPrice: Number(remote.market_price) || 0,
+      ourPrice: Number(remote.our_price) || 0,
+      stock: Number(remote.stock_qty) || 0,
+      featured: Boolean(remote.is_featured),
+      active: Boolean(remote.is_active),
+      desc: remote.short_desc || remote.long_desc || '',
+      tags: Array.isArray(remote.specs?.features) ? remote.specs.features.map(String) : (Array.isArray(remote.suitable_for) ? remote.suitable_for.map(String) : []),
+      createdAt: remote.created_at || new Date().toISOString(),
+      image: [...(remote.product_images || [])].sort((a: any, b: any) => (a.sort_order || 0) - (b.sort_order || 0))[0]?.url,
+    }))
+    const categories = (remoteCategories || []).map((remote: any): StoreCategory => ({
+      id: remote.id,
+      name: remote.name,
+      slug: remote.slug,
+      icon: remote.icon || 'package',
+      order: Number(remote.sort_order) || 0,
+      active: Boolean(remote.is_active),
+    }))
+    set({ products, categories })
+    persistStore({ products, categories })
+  },
   stockMoves: stored.stockMoves ?? [],
   invoices: stored.invoices ?? [],
   submissions: stored.submissions ?? [],

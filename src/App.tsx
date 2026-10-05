@@ -56,10 +56,15 @@ import NotFound from './pages/NotFound'
 
 export default function App() {
   const appearance = useStore((state) => state.appearance)
+  const syncCatalog = useStore((state) => state.syncCatalog)
 
   useEffect(() => {
     applyAppearance(appearance)
   }, [appearance])
+
+  useEffect(() => {
+    void syncCatalog()
+  }, [syncCatalog])
 
   return (
     <AuthProvider>
