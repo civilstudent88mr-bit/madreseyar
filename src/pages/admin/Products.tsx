@@ -46,10 +46,27 @@ export default function AdminProducts() {
 
   const openEdit = (p: StoreProduct) => { setEditing({ ...p }); setShowForm(true) }
 
-  const save = () => {
+  const save = async () => {
     if (!editing || !editing.name.trim()) return
-    upsertProduct({ ...editing, id: editing.id || `p${Date.now()}` })
-    toast('success', 'کالا ذخیره شد')
+    const localProduct = { ...editing, id: editing.id || `p${Date.now()}` }
+    if (adminSecret) {
+      const response = await fetch('/api/admin-save-product', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-admin-secret': adminSecret },
+        body: JSON.stringify({ product: localProduct }),
+      })
+      const result = await response.json().catch(() => ({}))
+      if (!response.ok) {
+        toast('error', result.error || 'ذخیره محصول در دیتابیس انجام نشد')
+        return
+      }
+      const saved = result.product
+      upsertProduct({ ...localProduct, id: saved?.id || localProduct.id, image: result.image || localProduct.image })
+      toast('success', 'محصول و تصویر در دیتابیس ذخیره شد')
+    } else {
+      upsertProduct(localProduct)
+      toast('success', 'کالا فقط روی این دستگاه ذخیره شد؛ برای ذخیره مرکزی کلید مدیریت را وارد کنید')
+    }
     setShowForm(false); setEditing(null)
   }
 
