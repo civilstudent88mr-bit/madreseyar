@@ -1,4 +1,5 @@
 const { createClient } = require('@supabase/supabase-js')
+
 const categories = ['skincare', 'sunscreen', 'face-makeup', 'eye-lip-makeup', 'haircare', 'bodycare', 'personal-hygiene', 'fragrance']
 const fallbackImages = {
   skincare: 'https://images.unsplash.com/photo-1556228578-0d85b1a4d571?auto=format&fit=crop&w=900&q=80',
@@ -10,32 +11,95 @@ const fallbackImages = {
   'personal-hygiene': 'https://images.unsplash.com/photo-1556229010-6c3f2c9c7f9f?auto=format&fit=crop&w=900&q=80',
   fragrance: 'https://images.unsplash.com/photo-1541643600914-78b084683601?auto=format&fit=crop&w=900&q=80',
 }
-function json(res, status, body) { res.status(status).setHeader('Content-Type', 'application/json').send(JSON.stringify(body)) }
-function slugify(value) { return String(value).trim().toLowerCase().replace(/[^\p{L}\p{N}]+/gu, '-').replace(/^-+|-+$/g, '') || `product-${Date.now()}` }
+
+function json(res, status, body) {
+  return res.status(status).setHeader('Content-Type', 'application/json').send(JSON.stringify(body))
+}
+
+function slugify(value) {
+  return String(value).trim().toLowerCase().replace(/[^\p{L}\p{N}]+/gu, '-').replace(/^-+|-+$/g, '') || `product-${Date.now()}`
+}
+
 module.exports = async function handler(req, res) {
   if (req.method !== 'POST') return json(res, 405, { error: 'Method not allowed' })
   const aiApiKey = process.env.AVALAI_API_KEY || process.env.OPENAI_API_KEY
   if (!process.env.AI_ADMIN_SECRET || !aiApiKey || !process.env.SUPABASE_SERVICE_ROLE_KEY) return json(res, 503, { error: 'AI service is not configured in Vercel.' })
   if (req.headers['x-admin-secret'] !== process.env.AI_ADMIN_SECRET) return json(res, 401, { error: 'کلید دسترسی AI نامعتبر است' })
+
   const productName = typeof req.body?.productName === 'string' ? req.body.productName.trim() : ''
+  const productDetails = typeof req.body?.productDetails === 'string' ? req.body.productDetails.trim() : ''
   if (productName.length < 2 || productName.length > 160) return json(res, 400, { error: 'نام محصول باید بین ۲ تا ۱۶۰ کاراکتر باشد' })
+  if (productDetails.length > 4000) return json(res, 400, { error: 'اطلاعات تکمیلی حداکثر باید ۴۰۰۰ نویسه باشد' })
+
   try {
     const aiBaseUrl = (process.env.AVALAI_BASE_URL || 'https://api.avalai.ir/v1').replace(/\/$/, '')
-    const aiResponse = await fetch(`${aiBaseUrl}/chat/completions`, { method: 'POST', headers: { Authorization: `Bearer ${aiApiKey}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ model: process.env.AVALAI_MODEL || process.env.OPENAI_MODEL || 'gpt-4o-mini', temperature: 0.35, response_format: { type: 'json_object' }, messages: [{ role: 'system', content: 'برای فروشگاه Healthcare محتوای دقیق و محتاطانه فارسی برای محصولات مراقبت پوست، آرایشی و بهداشتی تولید کن. ادعای درمان پزشکی نساز. فقط JSON معتبر برگردان.' }, { role: 'user', content: `برای محصول «${productName}» فقط JSON با کلیدهای name, slug, short_desc, long_desc, brand, category_slug, pack_size, market_price, our_price, cost_price, stock_qty, is_featured, is_hygiene, suitable_for, specs, image_url تولید کن. category_slug باید یکی از این‌ها باشد: ${categories.join(', ')}. عنوان، نقد علمی، ترکیبات مؤثر، نحوه مصرف، هشدار مصرف و قیمت تقریبی را در long_desc و specs فارسی بنویس. our_price نباید از market_price بیشتر باشد. اگر تصویر مطمئن نداری image_url را خالی بگذار.` }] }) })
+    const productPrompt = [
+      'برای محصول «' + productName + '» محتوا تولید کن.',
+      'اطلاعات تکمیلی مدیر منبع اصلی واقعیت‌هاست. موارد نامعلوم را حدس نزن؛ برای آن‌ها بنویس «در اطلاعات ارائه‌شده مشخص نشده است».',
+      'اطلاعات تکمیلی مدیر:',
+      productDetails || 'اطلاعات تکمیلی ارائه نشده است.',
+      'فقط JSON معتبر با کلیدهای name, slug, short_desc, long_desc, brand, category_slug, pack_size, market_price, our_price, cost_price, stock_qty, is_featured, is_hygiene, suitable_for, specs, image_url برگردان.',
+      'category_slug فقط یکی از این موارد باشد: ' + categories.join(', ') + '.',
+      'ترکیبات، کشور سازنده، مجوز، ایمنی، اثر درمانی، هشدار و روش مصرف را جعل نکن. ادعای درمان پزشکی نساز. قیمت‌ها عدد صحیح به تومان باشند؛ قیمت‌های دقیق داده‌شده را تغییر نده، و فقط اگر قیمت داده نشده بود تخمین بزن. our_price نباید از market_price بیشتر باشد.',
+      'اگر URL تصویر معتبر در اطلاعات مدیر نیست، image_url را خالی بگذار.'
+    ].join('\n')
+    const aiResponse = await fetch(aiBaseUrl + '/chat/completions', {
+      method: 'POST',
+      headers: { Authorization: 'Bearer ' + aiApiKey, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: process.env.AVALAI_MODEL || process.env.OPENAI_MODEL || 'gpt-4o-mini',
+        temperature: 0.2,
+        response_format: { type: 'json_object' },
+        messages: [
+          { role: 'system', content: 'برای فروشگاه Healthcare فقط JSON معتبر و محتوای فارسی تولید کن. اطلاعات تکمیلی مدیر را منبع اصلی بدان. اطلاعات ناقص را حدس نزن و ادعای پزشکی نساز.' },
+          { role: 'user', content: productPrompt },
+        ],
+      }),
+    })
     const aiPayload = await aiResponse.json()
     if (!aiResponse.ok) throw new Error(`سرویس AvalAI درخواست را نپذیرفت (کد ${aiResponse.status}). کلید، مدل و اعتبار حساب را بررسی کنید.`)
+
     const generated = JSON.parse(aiPayload.choices?.[0]?.message?.content || '{}')
     const categorySlug = categories.includes(generated.category_slug) ? generated.category_slug : 'skincare'
     const supabase = createClient(process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY)
     const { data: category, error: categoryError } = await supabase.from('categories').select('id').eq('slug', categorySlug).maybeSingle()
     if (categoryError) throw categoryError
+
     const marketPrice = Math.max(0, Math.round(Number(generated.market_price) || 0))
-    const row = { sku: `HC-AI-${Date.now().toString().slice(-8)}`, name: String(generated.name || productName).slice(0, 180), slug: slugify(generated.slug || generated.name || productName), short_desc: String(generated.short_desc || '').slice(0, 500), long_desc: String(generated.long_desc || '').slice(0, 5000), category_id: category?.id || null, brand: String(generated.brand || 'Healthcare').slice(0, 120), unit: 'عدد', pack_size: String(generated.pack_size || '').slice(0, 120), market_price: marketPrice, our_price: Math.min(marketPrice, Math.max(0, Math.round(Number(generated.our_price) || 0))), cost_price: Math.max(0, Math.round(Number(generated.cost_price) || 0)), min_order_qty: 1, step_qty: 1, max_order_qty: 100, stock_qty: Math.max(0, Math.round(Number(generated.stock_qty) || 0)), low_stock_threshold: 5, is_active: true, is_featured: Boolean(generated.is_featured), is_hygiene: Boolean(generated.is_hygiene), suitable_for: Array.isArray(generated.suitable_for) ? generated.suitable_for.map(String).slice(0, 10) : [], specs: generated.specs && typeof generated.specs === 'object' ? generated.specs : {}, weight_grams: 0 }
+    const row = {
+      sku: `HC-AI-${Date.now().toString().slice(-8)}`,
+      name: String(generated.name || productName).slice(0, 180),
+      slug: slugify(generated.slug || generated.name || productName),
+      short_desc: String(generated.short_desc || '').slice(0, 500),
+      long_desc: String(generated.long_desc || '').slice(0, 5000),
+      category_id: category?.id || null,
+      brand: String(generated.brand || 'Healthcare').slice(0, 120),
+      unit: 'عدد',
+      pack_size: String(generated.pack_size || '').slice(0, 120),
+      market_price: marketPrice,
+      our_price: Math.min(marketPrice, Math.max(0, Math.round(Number(generated.our_price) || 0))),
+      cost_price: Math.max(0, Math.round(Number(generated.cost_price) || 0)),
+      min_order_qty: 1,
+      step_qty: 1,
+      max_order_qty: 100,
+      stock_qty: Math.max(0, Math.round(Number(generated.stock_qty) || 0)),
+      low_stock_threshold: 5,
+      is_active: true,
+      is_featured: Boolean(generated.is_featured),
+      is_hygiene: Boolean(generated.is_hygiene),
+      suitable_for: Array.isArray(generated.suitable_for) ? generated.suitable_for.map(String).slice(0, 10) : [],
+      specs: generated.specs && typeof generated.specs === 'object' ? generated.specs : {},
+      weight_grams: 0,
+    }
     const { data: product, error: productError } = await supabase.from('products').insert(row).select('*').single()
     if (productError) throw productError
+
     const imageUrl = typeof generated.image_url === 'string' && generated.image_url.startsWith('https://') ? generated.image_url : fallbackImages[categorySlug]
     const { error: imageError } = await supabase.from('product_images').insert({ product_id: product.id, url: imageUrl, sort_order: 0 })
     if (imageError) throw imageError
     return json(res, 201, { product: { ...product, image: imageUrl } })
-  } catch (error) { console.error('AI product generation failed'); return json(res, 500, { error: error.message || 'تولید محصول انجام نشد' }) }
+  } catch (error) {
+    console.error('AI product generation failed')
+    return json(res, 500, { error: error.message || 'تولید محصول انجام نشد' })
+  }
 }
