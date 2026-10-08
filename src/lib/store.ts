@@ -17,6 +17,10 @@ export interface StoreProduct {
   tags: string[]
   createdAt: string
   image?: string
+  images?: string[]
+  brand?: string
+  longDesc?: string
+  specs?: Record<string, unknown>
 }
 
 export interface StoreCategory {
@@ -326,7 +330,11 @@ export const useStore = create<StoreState>((set, get) => ({
       desc: remote.short_desc || remote.long_desc || '',
       tags: Array.isArray(remote.specs?.features) ? remote.specs.features.map(String) : (Array.isArray(remote.suitable_for) ? remote.suitable_for.map(String) : []),
       createdAt: remote.created_at || new Date().toISOString(),
+      images: [...(remote.product_images || [])].sort((a: any, b: any) => (a.sort_order || 0) - (b.sort_order || 0)).map((image: any) => image.url).filter(Boolean),
       image: [...(remote.product_images || [])].sort((a: any, b: any) => (a.sort_order || 0) - (b.sort_order || 0))[0]?.url,
+      brand: remote.brand || undefined,
+      longDesc: remote.long_desc || undefined,
+      specs: remote.specs && typeof remote.specs === 'object' ? remote.specs : {},
     }))
     const categories = (remoteCategories || []).map((remote: any): StoreCategory => ({
       id: remote.id,
