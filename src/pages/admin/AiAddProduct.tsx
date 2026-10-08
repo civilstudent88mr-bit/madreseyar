@@ -15,6 +15,7 @@ export default function AiAddProduct() {
   const { toast } = useToast()
   const [name, setName] = useState('')
   const [details, setDetails] = useState('')
+  const [sourceUrl, setSourceUrl] = useState('')
   const [secret, setSecret] = useState('')
   const [loading, setLoading] = useState(false)
   const [product, setProduct] = useState<GeneratedProduct | null>(null)
@@ -28,13 +29,14 @@ export default function AiAddProduct() {
       const response = await fetch('/api/ai-add-product', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'x-admin-secret': secret },
-        body: JSON.stringify({ productName: name.trim(), productDetails: details.trim() }),
+        body: JSON.stringify({ productName: name.trim(), productDetails: details.trim(), productUrl: sourceUrl.trim() }),
       })
       const result = await response.json()
       if (!response.ok) throw new Error(result.error || 'تولید محصول انجام نشد')
       setProduct(result.product)
       setName('')
       setDetails('')
+      setSourceUrl('')
       toast('success', 'محصول تولید و در فروشگاه منتشر شد')
     } catch (error) {
       toast('error', error instanceof Error ? error.message : 'خطا در تولید محصول')
@@ -58,8 +60,13 @@ export default function AiAddProduct() {
           <input required value={name} onChange={(event) => setName(event.target.value)} className="input text-lg" placeholder="مثلاً: سرم ویتامین C برند X، حجم ۳۰ میلی‌لیتر" disabled={loading} />
         </div>
         <div>
+          <label className="label">لینک صفحهٔ همین محصول (اختیاری)</label>
+          <input type="url" value={sourceUrl} onChange={(event) => setSourceUrl(event.target.value)} className="input" dir="ltr" placeholder="https://example.com/product/..." disabled={loading} />
+          <p className="text-xs text-gray-500 mt-1">صفحه باید عمومی و بدون ورود باشد. بعضی سایت‌ها دسترسی خودکار را مسدود می‌کنند؛ در آن صورت متن مشخصات را در کادر بعدی وارد کنید.</p>
+        </div>
+        <div>
           <label className="label">اطلاعات و دستورهای تکمیلی برای AI</label>
-          <textarea value={details} onChange={(event) => setDetails(event.target.value)} className="input min-h-36 leading-7" maxLength={4000} placeholder="اطلاعات روی بسته‌بندی را اینجا وارد کنید: ترکیبات دقیق، حجم، روش مصرف و هشدارها، کشور سازنده، قیمت بازار و قیمت فروش به تومان، موجودی و توضیحات تأییدشده. هر مورد نامشخص را صریح بنویسید؛ لینک محصول کافی نیست و AI آن را بررسی نمی‌کند." disabled={loading} />
+          <textarea value={details} onChange={(event) => setDetails(event.target.value)} className="input min-h-36 leading-7" maxLength={4000} placeholder="اطلاعات روی بسته‌بندی را اینجا وارد کنید: ترکیبات دقیق، حجم، روش مصرف و هشدارها، کشور سازنده، قیمت بازار و قیمت فروش به تومان، موجودی و توضیحات تأییدشده." disabled={loading} />
           <p className="text-xs text-gray-500 mt-1">هرچه اطلاعات دقیق‌تری بدهید، نتیجه بهتر می‌شود. برای ادعاهای درمانی یا ترکیبات، متن برچسب محصول را مبنا قرار دهید.</p>
         </div>
         <div>
