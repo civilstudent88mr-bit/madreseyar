@@ -23,7 +23,7 @@ module.exports = async function handler(req, res) {
     const aiBaseUrl = (process.env.AVALAI_BASE_URL || 'https://api.avalai.ir/v1').replace(/\/$/, '')
     const aiResponse = await fetch(`${aiBaseUrl}/chat/completions`, { method: 'POST', headers: { Authorization: `Bearer ${aiApiKey}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ model: process.env.AVALAI_MODEL || process.env.OPENAI_MODEL || 'gpt-4o-mini', temperature: 0.35, response_format: { type: 'json_object' }, messages: [{ role: 'system', content: 'برای فروشگاه Healthcare محتوای دقیق و محتاطانه فارسی برای محصولات مراقبت پوست، آرایشی و بهداشتی تولید کن. ادعای درمان پزشکی نساز. فقط JSON معتبر برگردان.' }, { role: 'user', content: `برای محصول «${productName}» فقط JSON با کلیدهای name, slug, short_desc, long_desc, brand, category_slug, pack_size, market_price, our_price, cost_price, stock_qty, is_featured, is_hygiene, suitable_for, specs, image_url تولید کن. category_slug باید یکی از این‌ها باشد: ${categories.join(', ')}. عنوان، نقد علمی، ترکیبات مؤثر، نحوه مصرف، هشدار مصرف و قیمت تقریبی را در long_desc و specs فارسی بنویس. our_price نباید از market_price بیشتر باشد. اگر تصویر مطمئن نداری image_url را خالی بگذار.` }] }) })
     const aiPayload = await aiResponse.json()
-    if (!aiResponse.ok) throw new Error(aiPayload.error?.message || 'AI request failed')
+    if (!aiResponse.ok) throw new Error(`سرویس AvalAI درخواست را نپذیرفت (کد ${aiResponse.status}). کلید، مدل و اعتبار حساب را بررسی کنید.`)
     const generated = JSON.parse(aiPayload.choices?.[0]?.message?.content || '{}')
     const categorySlug = categories.includes(generated.category_slug) ? generated.category_slug : 'skincare'
     const supabase = createClient(process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY)
@@ -37,5 +37,5 @@ module.exports = async function handler(req, res) {
     const { error: imageError } = await supabase.from('product_images').insert({ product_id: product.id, url: imageUrl, sort_order: 0 })
     if (imageError) throw imageError
     return json(res, 201, { product: { ...product, image: imageUrl } })
-  } catch (error) { console.error(error); return json(res, 500, { error: error.message || 'تولید محصول انجام نشد' }) }
+  } catch (error) { console.error('AI product generation failed'); return json(res, 500, { error: error.message || 'تولید محصول انجام نشد' }) }
 }
