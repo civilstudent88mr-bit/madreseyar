@@ -23,7 +23,7 @@ export default function Cart() {
     return s
   }, 0)
 
-  const totalSaved = marketTotal - subtotal
+  const totalSaved = savedAmount(marketTotal, subtotal)
 
   if (lines.length === 0) {
     return (

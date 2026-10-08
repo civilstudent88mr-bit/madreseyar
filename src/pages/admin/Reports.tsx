@@ -48,10 +48,10 @@ export default function AdminReports() {
       <h1 className="text-xl font-extrabold text-gray-800 flex items-center gap-2"><BarChart3 className="w-5 h-5 text-primary-700" /> گزارش‌ها</h1>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <div className="card p-4"><div className="text-xs text-gray-500 mb-1">درآمد کل</div><p className="text-lg font-extrabold text-primary-700">{formatTomanShort(totalRevenue)} <span className="text-xs">ت</span></p></div>
-        <div className="card p-4 bg-success-50 border-success-100"><div className="text-xs text-success-700 mb-1 flex items-center gap-1"><TrendingDown className="w-3 h-3" /> صرفه‌جویی کل</div><p className="text-lg font-extrabold text-success-700">{formatTomanShort(totalSavings)} <span className="text-xs">ت</span></p></div>
+        <div className="card p-4"><div className="text-xs text-gray-500 mb-1">درآمد کل</div><p className="text-lg font-extrabold text-primary-700">{formatTomanShort(totalRevenue)} <span className="text-xs">تومان</span></p></div>
+        <div className="card p-4 bg-success-50 border-success-100"><div className="text-xs text-success-700 mb-1 flex items-center gap-1"><TrendingDown className="w-3 h-3" /> صرفه‌جویی کل</div><p className="text-lg font-extrabold text-success-700">{formatTomanShort(totalSavings)} <span className="text-xs">تومان</span></p></div>
         <div className="card p-4"><div className="text-xs text-gray-500 mb-1">تعداد سفارش</div><p className="text-lg font-extrabold text-gray-800">{orders.length}</p></div>
-        <div className="card p-4"><div className="text-xs text-gray-500 mb-1">میانگین سفارش</div><p className="text-lg font-extrabold text-gray-800">{formatTomanShort(avgOrder)} <span className="text-xs">ت</span></p></div>
+        <div className="card p-4"><div className="text-xs text-gray-500 mb-1">میانگین سفارش</div><p className="text-lg font-extrabold text-gray-800">{formatTomanShort(avgOrder)} <span className="text-xs">تومان</span></p></div>
       </div>
 
       <div className="card p-5">

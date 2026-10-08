@@ -9,6 +9,7 @@ module.exports = async function handler(req, res) {
   if (req.headers['x-admin-secret'] !== process.env.AI_ADMIN_SECRET) return json(res, 401, { error: 'Invalid admin secret' })
   const input = req.body?.product
   if (!input || typeof input.name !== 'string' || input.name.trim().length < 2) return json(res, 400, { error: 'Product name is required' })
+  if (![input.marketPrice, input.ourPrice].every((price) => typeof price === 'number' && Number.isFinite(price) && price >= 0)) return json(res, 400, { error: 'قیمت‌ها باید عدد نامنفی و به تومان باشند' })
   try {
     const supabase = createClient(process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY, { auth: { persistSession: false } })
     const { data: category, error: categoryError } = await supabase.from('categories').select('id').eq('name', input.category).maybeSingle()

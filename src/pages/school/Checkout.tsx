@@ -5,7 +5,7 @@ import { useCart } from '../../lib/cart'
 import { useAuth } from '../../lib/auth'
 import { useToast } from '../../lib/toast'
 import { supabase } from '../../lib/supabase'
-import { formatToman, formatTomanShort } from '../../lib/format'
+import { formatToman, formatTomanShort, savedAmount } from '../../lib/format'
 import { todayJalaliShort } from '../../lib/jalali'
 
 export default function Checkout() {
@@ -27,7 +27,7 @@ export default function Checkout() {
 
   const subtotal = lines.reduce((s, l) => s + (l.product?.our_price ?? l.bundle?.our_total ?? 0) * l.qty, 0)
   const marketTotal = lines.reduce((s, l) => s + (l.product?.market_price ?? l.bundle?.market_total ?? 0) * l.qty, 0)
-  const saved = marketTotal - subtotal
+  const saved = savedAmount(marketTotal, subtotal)
   const shippingFee = subtotal >= 5000000 ? 0 : 150000
   const grandTotal = subtotal + shippingFee
 

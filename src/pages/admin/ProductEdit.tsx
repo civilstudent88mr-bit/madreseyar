@@ -4,6 +4,7 @@ import { Save, ArrowRight } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import { useToast } from '../../lib/toast'
 import type { Category } from '../../lib/types'
+import { formatPriceInput, parsePriceInput } from '../../lib/format'
 
 export default function AdminProductEdit() {
   const { id } = useParams()
@@ -33,6 +34,10 @@ export default function AdminProductEdit() {
   const set = (k: string, v: any) => setForm({ ...form, [k]: v })
 
   const save = async () => {
+    if (![form.market_price, form.our_price, form.cost_price].every((price) => Number.isFinite(Number(price)) && Number(price) >= 0)) {
+      toast('error', 'قیمت‌ها باید عدد نامنفی و به تومان باشند')
+      return
+    }
     setSaving(true)
     const slug = form.slug || form.name.replace(/\s+/g, '-')
     const payload = { ...form, slug, market_price: Number(form.market_price), our_price: Number(form.our_price), cost_price: Number(form.cost_price) }
@@ -76,9 +81,9 @@ export default function AdminProductEdit() {
         <div><label className="label">توضیح کامل</label><textarea value={form.long_desc} onChange={(e) => set('long_desc', e.target.value)} className="input min-h-[80px]" /></div>
 
         <div className="grid grid-cols-3 gap-3">
-          <div><label className="label">قیمت بازار (ت)</label><input type="number" value={form.market_price} onChange={(e) => set('market_price', e.target.value)} className="input" dir="ltr" /></div>
-          <div><label className="label">قیمت ما (ت)</label><input type="number" value={form.our_price} onChange={(e) => set('our_price', e.target.value)} className="input" dir="ltr" /></div>
-          <div><label className="label">قیمت هزینه (ت)</label><input type="number" value={form.cost_price} onChange={(e) => set('cost_price', e.target.value)} className="input" dir="ltr" /></div>
+          <div><label className="label">قیمت بازار (تومان)</label><input type="text" inputMode="numeric" value={Number(form.market_price) ? formatPriceInput(Number(form.market_price)) : ''} onChange={(e) => set('market_price', parsePriceInput(e.target.value))} className="input" dir="ltr" /></div>
+          <div><label className="label">قیمت ما (تومان)</label><input type="text" inputMode="numeric" value={Number(form.our_price) ? formatPriceInput(Number(form.our_price)) : ''} onChange={(e) => set('our_price', parsePriceInput(e.target.value))} className="input" dir="ltr" /></div>
+          <div><label className="label">قیمت هزینه (تومان)</label><input type="text" inputMode="numeric" value={Number(form.cost_price) ? formatPriceInput(Number(form.cost_price)) : ''} onChange={(e) => set('cost_price', parsePriceInput(e.target.value))} className="input" dir="ltr" /></div>
         </div>
 
         <div className="grid grid-cols-3 gap-3">

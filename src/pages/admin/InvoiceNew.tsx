@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Save, Plus, Trash2, ArrowRight } from 'lucide-react'
 import { useStore, type InvoiceItem } from '../../lib/store'
 import { useToast } from '../../lib/toast'
-import { formatToman, formatTomanShort, formatNumber } from '../../lib/format'
+import { formatToman, formatTomanShort, formatNumber, savedAmount } from '../../lib/format'
 import { todayJalaliShort } from '../../lib/jalali'
 
 export default function AdminInvoiceNew() {
@@ -34,7 +34,7 @@ export default function AdminInvoiceNew() {
 
   const total = items.reduce((s, it) => s + it.qty * it.unitPrice, 0)
   const marketTotal = items.reduce((s, it) => s + it.qty * it.marketPrice, 0)
-  const saved = marketTotal - total
+  const saved = savedAmount(marketTotal, total)
 
   const save = (status: 'draft' | 'posted') => {
     if (!party.trim()) { toast('error', 'نام طرف را وارد کنید'); return }

@@ -2,7 +2,7 @@ import { useState, type ChangeEvent } from 'react'
 import { Plus, Search, Edit, Trash2, Package, X, Save, Eye, EyeOff } from 'lucide-react'
 import { useStore, type StoreProduct } from '../../lib/store'
 import { useToast } from '../../lib/toast'
-import { formatTomanShort, formatNumber } from '../../lib/format'
+import { formatTomanShort, formatNumber, discountPercent, formatPriceInput, parsePriceInput } from '../../lib/format'
 import { EmptyState } from '../../lib/ui'
 import ProductImage from '../../components/ProductImage'
 
@@ -48,6 +48,10 @@ export default function AdminProducts() {
 
   const save = async () => {
     if (!editing || !editing.name.trim()) return
+    if (![editing.marketPrice, editing.ourPrice].every((price) => Number.isFinite(price) && price >= 0)) {
+      toast('error', 'قیمت‌ها باید عدد نامنفی و به تومان باشند')
+      return
+    }
     const localProduct = { ...editing, id: editing.id || `p${Date.now()}` }
     if (adminSecret) {
       const response = await fetch('/api/admin-save-product', {
@@ -189,8 +193,8 @@ export default function AdminProducts() {
                 </div>
                 <div><label className="label">واحد</label><input value={editing.unit} onChange={(e) => setEditing({ ...editing, unit: e.target.value })} className="input" /></div>
                 <div><label className="label">بسته‌بندی</label><input value={editing.packQty} onChange={(e) => setEditing({ ...editing, packQty: e.target.value })} className="input" /></div>
-                <div><label className="label">قیمت بازار (تومان)</label><input type="number" value={editing.marketPrice} onChange={(e) => setEditing({ ...editing, marketPrice: Number(e.target.value) })} className="input" dir="ltr" /></div>
-                <div><label className="label">قیمت فروش (تومان)</label><input type="number" value={editing.ourPrice} onChange={(e) => setEditing({ ...editing, ourPrice: Number(e.target.value) })} className="input" dir="ltr" /></div>
+                <div><label className="label">قیمت بازار (تومان)</label><input type="text" inputMode="numeric" value={editing.marketPrice ? formatPriceInput(editing.marketPrice) : ''} onChange={(e) => setEditing({ ...editing, marketPrice: parsePriceInput(e.target.value) })} className="input" dir="ltr" /></div>
+                <div><label className="label">قیمت فروش (تومان) — تخفیف {formatNumber(discountPercent(editing.marketPrice, editing.ourPrice))}٪</label><input type="text" inputMode="numeric" value={editing.ourPrice ? formatPriceInput(editing.ourPrice) : ''} onChange={(e) => setEditing({ ...editing, ourPrice: parsePriceInput(e.target.value) })} className="input" dir="ltr" /></div>
                 <div><label className="label">موجودی اولیه</label><input type="number" value={editing.stock} onChange={(e) => setEditing({ ...editing, stock: Number(e.target.value) })} className="input" dir="ltr" /></div>
               </div>
               <div className="space-y-2">
