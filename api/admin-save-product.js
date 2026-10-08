@@ -18,12 +18,22 @@ module.exports = async function handler(req, res) {
     const row = {
       ...(isUuid(input.id) ? { id: input.id } : {}),
       sku: input.sku || null, name: input.name.trim(), slug,
-      short_desc: input.desc || '', long_desc: input.desc || '', category_id: category?.id || null,
+      short_desc: input.desc || '', long_desc: input.longDesc || input.desc || '', category_id: category?.id || null,
       brand: input.brand || null, unit: input.unit || 'عدد', pack_size: input.packQty || null,
       market_price: Math.max(0, Number(input.marketPrice) || 0), our_price: Math.max(0, Number(input.ourPrice) || 0), cost_price: 0,
       min_order_qty: 1, step_qty: 1, max_order_qty: 9999, stock_qty: Math.max(0, Number(input.stock) || 0), low_stock_threshold: 5,
       is_active: input.active !== false, is_featured: Boolean(input.featured), is_hygiene: input.category === 'بهداشتی',
-      suitable_for: Array.isArray(input.tags) ? input.tags.map(String).slice(0, 20) : [], specs: { features: Array.isArray(input.tags) ? input.tags : [] }, weight_grams: 0,
+      suitable_for: Array.isArray(input.tags) ? input.tags.map(String).slice(0, 20) : [],
+      specs: {
+        ...(input.specs && typeof input.specs === 'object' && !Array.isArray(input.specs) ? input.specs : {}),
+        features: Array.isArray(input.specs?.features) ? input.specs.features.map(String).slice(0, 30) : [],
+        tags: Array.isArray(input.specs?.tags) ? input.specs.tags.map(String).slice(0, 30) : [],
+        ingredients: Array.isArray(input.specs?.ingredients) ? input.specs.ingredients.slice(0, 50).map((item) => ({
+          name: String(item?.name || '').slice(0, 160),
+          amount_per_serving: String(item?.amount_per_serving || '').slice(0, 80),
+          daily_value_percent: String(item?.daily_value_percent || '').slice(0, 40),
+        })) : [],
+      }, weight_grams: 0,
     }
     let saved
     if (isUuid(input.id)) {

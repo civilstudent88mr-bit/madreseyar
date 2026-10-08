@@ -5,6 +5,7 @@ import { useToast } from '../../lib/toast'
 import { formatTomanShort, formatNumber, discountPercent, formatPriceInput, parsePriceInput } from '../../lib/format'
 import { EmptyState } from '../../lib/ui'
 import ProductImage from '../../components/ProductImage'
+import ProductDetailsFields from '../../components/admin/ProductDetailsFields'
 
 export default function AdminProducts() {
   const { products, categories, upsertProduct, deleteProduct, adjustStock } = useStore()
@@ -19,7 +20,7 @@ export default function AdminProducts() {
   const filtered = products.filter((p) => (!filterCat || p.category === filterCat) && (!search || p.name.includes(search) || p.sku.includes(search)))
 
   const openNew = () => {
-    setEditing({ id: '', name: '', sku: '', category: activeCategoryNames[0] ?? '', unit: 'عدد', packQty: '', marketPrice: 0, ourPrice: 0, stock: 0, featured: false, active: true, desc: '', tags: [], createdAt: '' })
+    setEditing({ id: '', name: '', sku: '', category: activeCategoryNames[0] ?? '', unit: 'عدد', packQty: '', marketPrice: 0, ourPrice: 0, stock: 0, featured: false, active: true, desc: '', tags: [], createdAt: '', specs: {} })
     setShowForm(true)
   }
 
@@ -210,7 +211,9 @@ export default function AdminProducts() {
                 {editing.image && <div className="flex items-center gap-3 rounded-xl border border-gray-200 p-2"><ProductImage src={editing.image} name={editing.name} className="h-20 w-20 rounded-lg" /><button type="button" onClick={() => setEditing({ ...editing, image: undefined })} className="btn-ghost text-error-600 text-sm">حذف عکس</button></div>}
               </div>
               <div><label className="label">توضیحات</label><textarea value={editing.desc} onChange={(e) => setEditing({ ...editing, desc: e.target.value })} className="input min-h-[60px]" /></div>
+              <div><label className="label">توضیحات کامل</label><textarea value={editing.longDesc ?? ''} onChange={(e) => setEditing({ ...editing, longDesc: e.target.value })} className="input min-h-28" /></div>
               <div><label className="label">تگ‌ها (با کاما جدا کنید)</label><input value={editing.tags.join(', ')} onChange={(e) => setEditing({ ...editing, tags: e.target.value.split(',').map((t) => t.trim()).filter(Boolean) })} className="input" /></div>
+              <ProductDetailsFields specs={editing.specs ?? {}} onChange={(specs) => setEditing({ ...editing, specs })} />
               <label className="flex items-center gap-2 cursor-pointer"><input type="checkbox" checked={editing.featured} onChange={(e) => setEditing({ ...editing, featured: e.target.checked })} className="w-4 h-4 rounded text-primary-600" /><span className="text-sm">کالای ویژه</span></label>
               <label className="flex items-center gap-2 cursor-pointer"><input type="checkbox" checked={editing.active} onChange={(e) => setEditing({ ...editing, active: e.target.checked })} className="w-4 h-4 rounded text-primary-600" /><span className="text-sm">فعال (در فروشگاه نمایش داده شود)</span></label>
               <button onClick={save} className="btn-primary w-full py-3"><Save className="w-4 h-4" /> ذخیره</button>

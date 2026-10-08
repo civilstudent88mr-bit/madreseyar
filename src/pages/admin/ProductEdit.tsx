@@ -5,6 +5,7 @@ import { supabase } from '../../lib/supabase'
 import { useToast } from '../../lib/toast'
 import type { Category } from '../../lib/types'
 import { formatPriceInput, parsePriceInput } from '../../lib/format'
+import ProductDetailsFields from '../../components/admin/ProductDetailsFields'
 
 export default function AdminProductEdit() {
   const { id } = useParams()
@@ -20,6 +21,7 @@ export default function AdminProductEdit() {
     stock_qty: 0, low_stock_threshold: 10,
     is_active: true, is_featured: false, is_hygiene: false,
     suitable_for: [] as string[],
+    specs: {} as Record<string, unknown>,
   })
 
   useEffect(() => {
@@ -79,6 +81,8 @@ export default function AdminProductEdit() {
 
         <div><label className="label">توضیح کوتاه</label><input value={form.short_desc} onChange={(e) => set('short_desc', e.target.value)} className="input" /></div>
         <div><label className="label">توضیح کامل</label><textarea value={form.long_desc} onChange={(e) => set('long_desc', e.target.value)} className="input min-h-[80px]" /></div>
+
+        <ProductDetailsFields specs={form.specs ?? {}} onChange={(specs) => set('specs', specs)} />
 
         <div className="grid grid-cols-3 gap-3">
           <div><label className="label">قیمت بازار (تومان)</label><input type="text" inputMode="numeric" value={Number(form.market_price) ? formatPriceInput(Number(form.market_price)) : ''} onChange={(e) => set('market_price', parsePriceInput(e.target.value))} className="input" dir="ltr" /></div>
