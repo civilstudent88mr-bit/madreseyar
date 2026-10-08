@@ -45,8 +45,8 @@ export default function InvoicePrint() {
               <th className="px-3 py-2 text-right font-medium border border-gray-200">ردیف</th>
               <th className="px-3 py-2 text-right font-medium border border-gray-200">نام کالا</th>
               <th className="px-3 py-2 text-right font-medium border border-gray-200">تعداد</th>
-              <th className="px-3 py-2 text-right font-medium border border-gray-200">قیمت واحد (ریال)</th>
-              <th className="px-3 py-2 text-right font-medium border border-gray-200">جمع (ریال)</th>
+              <th className="px-3 py-2 text-right font-medium border border-gray-200">قیمت واحد (تومان)</th>
+              <th className="px-3 py-2 text-right font-medium border border-gray-200">جمع (تومان)</th>
             </tr>
           </thead>
           <tbody>
@@ -64,9 +64,9 @@ export default function InvoicePrint() {
 
         <div className="flex justify-end mb-6">
           <div className="w-64 space-y-2 text-sm">
-            <div className="flex justify-between"><span className="text-gray-500">جمع قیمت بازار</span><span className="text-gray-400 line-through">{formatTomanShort(inv.marketTotal)} ر</span></div>
-            <div className="flex justify-between"><span className="text-gray-700 font-medium">جمع فروشگاه</span><span className="font-bold text-primary-700">{formatTomanShort(inv.total)} ر</span></div>
-            <div className="flex justify-between bg-success-50 rounded-lg px-3 py-2"><span className="text-success-700 font-bold">صرفه‌جویی</span><span className="font-bold text-success-700">{formatTomanShort(inv.savedAmount)} ر</span></div>
+            <div className="flex justify-between"><span className="text-gray-500">جمع قیمت بازار</span><span className="text-gray-400 line-through">{formatTomanShort(inv.marketTotal)} تومان</span></div>
+            <div className="flex justify-between"><span className="text-gray-700 font-medium">جمع فروشگاه</span><span className="font-bold text-primary-700">{formatTomanShort(inv.total)} تومان</span></div>
+            <div className="flex justify-between bg-success-50 rounded-lg px-3 py-2"><span className="text-success-700 font-bold">صرفه‌جویی</span><span className="font-bold text-success-700">{formatTomanShort(inv.savedAmount)} تومان</span></div>
             <div className="flex justify-between border-t border-gray-200 pt-2"><span className="font-bold text-gray-800">مبلغ نهایی</span><span className="font-extrabold text-lg text-primary-700">{formatToman(inv.total)}</span></div>
           </div>
         </div>

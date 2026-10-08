@@ -129,9 +129,9 @@ export default function Checkout() {
                   <div key={l.id} className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0">
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-gray-800 truncate">{l.product?.name ?? l.bundle?.name}</p>
-                      <p className="text-xs text-gray-500">{l.qty} × {formatTomanShort(l.product?.our_price ?? l.bundle?.our_total ?? 0)} ت</p>
+                      <p className="text-xs text-gray-500">{l.qty} × {formatTomanShort(l.product?.our_price ?? l.bundle?.our_total ?? 0)} تومان</p>
                     </div>
-                    <p className="font-bold text-sm text-gray-800">{formatTomanShort((l.product?.our_price ?? l.bundle?.our_total ?? 0) * l.qty)} ت</p>
+                    <p className="font-bold text-sm text-gray-800">{formatTomanShort((l.product?.our_price ?? l.bundle?.our_total ?? 0) * l.qty)} تومان</p>
                   </div>
                 ))}
               </div>
@@ -208,9 +208,9 @@ export default function Checkout() {
         {/* Summary */}
         <div className="card p-5 h-fit sticky top-20 space-y-3">
           <h3 className="font-bold text-gray-800">خلاصه سفارش</h3>
-          <div className="flex justify-between text-sm"><span className="text-gray-500">قیمت بازار</span><span className="text-gray-400 line-through">{formatTomanShort(marketTotal)} ت</span></div>
-          <div className="flex justify-between text-sm"><span className="text-gray-700 font-medium">قیمت Healthcare</span><span className="font-bold text-primary-700">{formatTomanShort(subtotal)} ت</span></div>
-          <div className="flex justify-between text-sm"><span className="text-gray-500">هزینه ارسال</span><span className={shippingFee === 0 ? 'text-success-600 font-bold' : 'text-gray-700'}>{shippingFee === 0 ? 'رایگان' : `${formatTomanShort(shippingFee)} ت`}</span></div>
+          <div className="flex justify-between text-sm"><span className="text-gray-500">قیمت بازار</span><span className="text-gray-400 line-through">{formatTomanShort(marketTotal)} تومان</span></div>
+          <div className="flex justify-between text-sm"><span className="text-gray-700 font-medium">قیمت Healthcare</span><span className="font-bold text-primary-700">{formatTomanShort(subtotal)} تومان</span></div>
+          <div className="flex justify-between text-sm"><span className="text-gray-500">هزینه ارسال</span><span className={shippingFee === 0 ? 'text-success-600 font-bold' : 'text-gray-700'}>{shippingFee === 0 ? 'رایگان' : `${formatTomanShort(shippingFee)} تومان`}</span></div>
           <div className="border-t border-gray-100 pt-3 flex justify-between"><span className="font-bold text-gray-800">مبلغ کل</span><span className="font-extrabold text-lg text-primary-700">{formatToman(grandTotal)}</span></div>
           <div className="bg-success-50 rounded-xl px-3 py-2 text-center"><p className="text-xs text-success-700">صرفه‌جویی شما: {formatToman(saved)}</p></div>
         </div>

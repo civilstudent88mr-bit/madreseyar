@@ -58,7 +58,7 @@ export default function Cart() {
                 <div className="flex-1 min-w-0">
                   <Link to={slug ? `/product/${slug}` : '#'} className="font-bold text-sm text-gray-800 hover:text-primary-700 truncate block">{name}</Link>
                   <div className="flex items-baseline gap-2 mt-1">
-                    <span className="font-bold text-primary-700 text-sm">{formatTomanShort(ourPrice)} ت</span>
+                    <span className="font-bold text-primary-700 text-sm">{formatTomanShort(ourPrice)} تومان</span>
                     {marketPrice > ourPrice && <span className="text-xs text-gray-400 line-through">{formatTomanShort(marketPrice)}</span>}
                   </div>
                 </div>
@@ -80,19 +80,19 @@ export default function Cart() {
             <h3 className="font-bold text-gray-800">خلاصه سفارش</h3>
             <div className="flex justify-between text-sm">
               <span className="text-gray-500">قیمت بازار</span>
-              <span className="text-gray-400 line-through">{formatTomanShort(marketTotal)} ت</span>
+              <span className="text-gray-400 line-through">{formatTomanShort(marketTotal)} تومان</span>
             </div>
             <div className="flex justify-between text-sm">
               <span className="text-gray-700 font-medium">قیمت Healthcare</span>
-              <span className="font-bold text-primary-700">{formatTomanShort(subtotal)} ت</span>
+              <span className="font-bold text-primary-700">{formatTomanShort(subtotal)} تومان</span>
             </div>
             <div className="flex justify-between bg-success-50 rounded-xl px-3 py-2.5">
               <span className="flex items-center gap-1.5 text-success-700 font-bold text-sm"><TrendingDown className="w-4 h-4" /> صرفه‌جویی شما</span>
-              <span className="font-bold text-success-700">{formatTomanShort(totalSaved)} ت</span>
+              <span className="font-bold text-success-700">{formatTomanShort(totalSaved)} تومان</span>
             </div>
             <div className="border-t border-gray-100 pt-3 flex justify-between">
               <span className="font-bold text-gray-800">مبلغ قابل پرداخت</span>
-              <span className="font-extrabold text-lg text-primary-700">{formatTomanShort(subtotal)} ت</span>
+              <span className="font-extrabold text-lg text-primary-700">{formatTomanShort(subtotal)} تومان</span>
             </div>
             {school?.status !== 'approved' ? (
               <div className="bg-accent-50 border border-accent-200 rounded-xl px-3 py-2.5 text-center text-sm text-accent-800">

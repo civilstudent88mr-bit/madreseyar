@@ -51,8 +51,8 @@ export default function Orders() {
               </div>
               <div className="flex items-center gap-3">
                 <div className="text-left hidden sm:block">
-                  <p className="text-sm font-bold text-primary-700">{formatTomanShort(o.grand_total)} ت</p>
-                  <p className="text-[10px] text-success-600">صرفه‌جویی {formatTomanShort(o.saved_amount_snapshot)} ت</p>
+                  <p className="text-sm font-bold text-primary-700">{formatTomanShort(o.grand_total)} تومان</p>
+                  <p className="text-[10px] text-success-600">صرفه‌جویی {formatTomanShort(o.saved_amount_snapshot)} تومان</p>
                 </div>
                 <StatusChip status={o.status} />
               </div>

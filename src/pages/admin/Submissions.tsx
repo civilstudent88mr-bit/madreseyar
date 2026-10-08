@@ -85,8 +85,8 @@ export default function AdminSubmissions() {
 
             {action === 'approved' && (
               <div className="space-y-3 mb-3">
-                <div><label className="label">قیمت بازار (ریال)</label><input type="number" value={market || ''} onChange={(e) => setMarket(Number(e.target.value))} className="input" dir="ltr" /></div>
-                <div><label className="label">قیمت فروشگاه (ریال)</label><input type="number" value={our || ''} onChange={(e) => setOur(Number(e.target.value))} className="input" dir="ltr" /></div>
+                <div><label className="label">قیمت بازار (تومان)</label><input type="number" value={market || ''} onChange={(e) => setMarket(Number(e.target.value))} className="input" dir="ltr" /></div>
+                <div><label className="label">قیمت فروشگاه (تومان)</label><input type="number" value={our || ''} onChange={(e) => setOur(Number(e.target.value))} className="input" dir="ltr" /></div>
                 <div><label className="label">موجودی اولیه</label><input type="number" value={stock || ''} onChange={(e) => setStock(Number(e.target.value))} className="input" dir="ltr" /></div>
               </div>
             )}

@@ -144,8 +144,8 @@ export default function AdminProducts() {
                   <td className="px-4 py-3 font-medium text-gray-800">{p.name}</td>
                   <td className="px-4 py-3 text-gray-500" dir="ltr">{p.sku}</td>
                   <td className="px-4 py-3 text-gray-600">{p.category}</td>
-                  <td className="px-4 py-3 text-gray-400 line-through">{formatTomanShort(p.marketPrice)} ر</td>
-                  <td className="px-4 py-3 font-bold text-primary-700">{formatTomanShort(p.ourPrice)} ر</td>
+                  <td className="px-4 py-3 text-gray-400 line-through">{formatTomanShort(p.marketPrice)} تومان</td>
+                  <td className="px-4 py-3 font-bold text-primary-700">{formatTomanShort(p.ourPrice)} تومان</td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-1">
                       <span className={p.stock < 5 ? 'text-error-600 font-bold' : 'text-gray-700'}>{formatNumber(p.stock)}</span>
@@ -189,8 +189,8 @@ export default function AdminProducts() {
                 </div>
                 <div><label className="label">واحد</label><input value={editing.unit} onChange={(e) => setEditing({ ...editing, unit: e.target.value })} className="input" /></div>
                 <div><label className="label">بسته‌بندی</label><input value={editing.packQty} onChange={(e) => setEditing({ ...editing, packQty: e.target.value })} className="input" /></div>
-                <div><label className="label">قیمت بازار (ریال)</label><input type="number" value={editing.marketPrice} onChange={(e) => setEditing({ ...editing, marketPrice: Number(e.target.value) })} className="input" dir="ltr" /></div>
-                <div><label className="label">قیمت فروش (ریال)</label><input type="number" value={editing.ourPrice} onChange={(e) => setEditing({ ...editing, ourPrice: Number(e.target.value) })} className="input" dir="ltr" /></div>
+                <div><label className="label">قیمت بازار (تومان)</label><input type="number" value={editing.marketPrice} onChange={(e) => setEditing({ ...editing, marketPrice: Number(e.target.value) })} className="input" dir="ltr" /></div>
+                <div><label className="label">قیمت فروش (تومان)</label><input type="number" value={editing.ourPrice} onChange={(e) => setEditing({ ...editing, ourPrice: Number(e.target.value) })} className="input" dir="ltr" /></div>
                 <div><label className="label">موجودی اولیه</label><input type="number" value={editing.stock} onChange={(e) => setEditing({ ...editing, stock: Number(e.target.value) })} className="input" dir="ltr" /></div>
               </div>
               <div className="space-y-2">

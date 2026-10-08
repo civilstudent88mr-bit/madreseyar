@@ -70,7 +70,7 @@ export default function AdminKanban() {
                     >
                       <p className="font-bold text-xs text-gray-800" dir="ltr">{inv.number}</p>
                       <p className="text-xs text-gray-500 mt-0.5">{inv.party}</p>
-                      <p className="text-sm font-bold text-primary-700 mt-1">{formatTomanShort(inv.total)} ر</p>
+                      <p className="text-sm font-bold text-primary-700 mt-1">{formatTomanShort(inv.total)} تومان</p>
                       <p className="text-[10px] text-gray-400">{formatJalaliDateShort(inv.date)}</p>
                       <div className="flex gap-1 mt-2">
                         <button onClick={() => move(inv.id, -1)} className="btn-ghost p-1 text-xs"><ArrowRight className="w-3 h-3" /></button>

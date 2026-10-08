@@ -81,7 +81,7 @@ export default function AdminInvoiceNew() {
                 <tr>
                   <th className="px-3 py-2 text-right font-medium">کالا</th>
                   <th className="px-3 py-2 text-right font-medium">تعداد</th>
-                  <th className="px-3 py-2 text-right font-medium">قیمت واحد (ریال)</th>
+                  <th className="px-3 py-2 text-right font-medium">قیمت واحد (تومان)</th>
                   <th className="px-3 py-2 text-right font-medium">جمع</th>
                   <th className="px-3 py-2"></th>
                 </tr>
@@ -92,7 +92,7 @@ export default function AdminInvoiceNew() {
                     <td className="px-3 py-2 text-gray-800">{it.name}</td>
                     <td className="px-3 py-2"><input type="number" value={it.qty} onChange={(e) => updateItem(i, 'qty', Number(e.target.value))} className="input py-1 text-sm w-20" dir="ltr" /></td>
                     <td className="px-3 py-2"><input type="number" value={it.unitPrice} onChange={(e) => updateItem(i, 'unitPrice', Number(e.target.value))} className="input py-1 text-sm w-32" dir="ltr" /></td>
-                    <td className="px-3 py-2 font-bold text-primary-700">{formatTomanShort(it.qty * it.unitPrice)} ر</td>
+                    <td className="px-3 py-2 font-bold text-primary-700">{formatTomanShort(it.qty * it.unitPrice)} تومان</td>
                     <td className="px-3 py-2"><button onClick={() => removeItem(i)} className="btn-ghost p-1 text-error-600"><Trash2 className="w-4 h-4" /></button></td>
                   </tr>
                 ))}

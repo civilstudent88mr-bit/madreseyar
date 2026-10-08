@@ -49,7 +49,7 @@ export default function AdminInvoices() {
                 </div>
               </div>
               <div className="flex items-center gap-3">
-                <span className="text-sm font-bold text-primary-700">{formatTomanShort(inv.total)} ر</span>
+                <span className="text-sm font-bold text-primary-700">{formatTomanShort(inv.total)} تومان</span>
                 <span className={`chip text-[10px] ${inv.status === 'posted' ? 'bg-success-100 text-success-700' : inv.status === 'void' ? 'bg-error-100 text-error-700' : 'bg-gray-100 text-gray-600'}`}>
                   {inv.status === 'posted' ? 'ثبت‌شده' : inv.status === 'void' ? 'باطل' : 'پیش‌نویس'}
                 </span>

@@ -30,7 +30,7 @@ export default function AdminBundles() {
               <h3 className="font-bold text-gray-800 mb-1">{b.name}</h3>
               <p className="text-xs text-gray-500 mb-3 line-clamp-2">{b.description}</p>
               <div className="flex items-baseline gap-2">
-                <span className="font-bold text-primary-700">{formatTomanShort(b.our_total)} ت</span>
+                <span className="font-bold text-primary-700">{formatTomanShort(b.our_total)} تومان</span>
                 <span className="text-xs text-gray-400 line-through">{formatTomanShort(b.market_total)}</span>
               </div>
               <span className="chip bg-accent-100 text-accent-700 mt-2 text-[10px]"><TrendingDown className="w-3 h-3" /> {discountPercent(b.market_total, b.our_total)}٪</span>

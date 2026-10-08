@@ -67,14 +67,14 @@ export default function AdminOrderDetail() {
             <div className="space-y-2">
               {items.map((it) => (
                 <div key={it.id} className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0">
-                  <div className="flex-1"><p className="text-sm font-medium text-gray-800">{it.name}</p><p className="text-xs text-gray-500">{it.qty} × {formatTomanShort(it.our_price)} ت</p></div>
-                  <p className="font-bold text-sm">{formatTomanShort(it.line_total)} ت</p>
+                  <div className="flex-1"><p className="text-sm font-medium text-gray-800">{it.name}</p><p className="text-xs text-gray-500">{it.qty} × {formatTomanShort(it.our_price)} تومان</p></div>
+                  <p className="font-bold text-sm">{formatTomanShort(it.line_total)} تومان</p>
                 </div>
               ))}
             </div>
             <div className="border-t border-gray-200 mt-3 pt-3 space-y-1 text-sm">
-              <div className="flex justify-between"><span className="text-gray-500">صرفه‌جویی مشتری</span><span className="text-success-600 font-bold">{formatTomanShort(order.saved_amount_snapshot)} ت</span></div>
-              <div className="flex justify-between"><span className="text-gray-500">ارسال</span><span>{order.shipping_fee === 0 ? 'رایگان' : `${formatTomanShort(order.shipping_fee)} ت`}</span></div>
+              <div className="flex justify-between"><span className="text-gray-500">صرفه‌جویی مشتری</span><span className="text-success-600 font-bold">{formatTomanShort(order.saved_amount_snapshot)} تومان</span></div>
+              <div className="flex justify-between"><span className="text-gray-500">ارسال</span><span>{order.shipping_fee === 0 ? 'رایگان' : `${formatTomanShort(order.shipping_fee)} تومان`}</span></div>
               <div className="flex justify-between font-bold text-base pt-1"><span>مبلغ کل</span><span className="text-primary-700">{formatToman(order.grand_total)}</span></div>
             </div>
           </div>

@@ -72,7 +72,7 @@ export default function AdminOrders() {
             <Link key={o.id} to={`/admin/orders/${o.id}`} className="card p-3 flex items-center justify-between hover:shadow-card-hover transition">
               <div><p className="font-bold text-sm text-gray-800" dir="ltr">{o.order_number}</p><p className="text-xs text-gray-500">{formatJalaliDateShort(o.created_at)}</p></div>
               <div className="flex items-center gap-3">
-                <span className="text-sm font-bold text-primary-700">{formatTomanShort(o.grand_total)} ت</span>
+                <span className="text-sm font-bold text-primary-700">{formatTomanShort(o.grand_total)} تومان</span>
                 <StatusChip status={o.status} />
               </div>
             </Link>

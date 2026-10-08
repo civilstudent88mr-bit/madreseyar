@@ -27,10 +27,17 @@ export function formatNumber(n: number): string {
 }
 
 export function discountPercent(market: number, our: number): number {
-  if (market <= 0) return 0
-  return Math.round(((market - our) / market) * 100)
+  const marketPrice = Number(market)
+  const salePrice = Number(our)
+  if (!Number.isFinite(marketPrice) || !Number.isFinite(salePrice) || marketPrice <= 0 || salePrice >= marketPrice) return 0
+  const percentage = ((marketPrice - Math.max(0, salePrice)) / marketPrice) * 100
+  return Math.min(100, Math.max(0, Math.round(percentage)))
 }
 
 export function savedAmount(market: number, our: number, qty = 1): number {
-  return Math.max(0, (market - our) * qty)
+  const marketPrice = Number(market)
+  const salePrice = Number(our)
+  const quantity = Math.max(0, Number(qty) || 0)
+  if (!Number.isFinite(marketPrice) || !Number.isFinite(salePrice)) return 0
+  return Math.max(0, marketPrice - salePrice) * quantity
 }

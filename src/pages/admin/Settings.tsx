@@ -29,7 +29,7 @@ export default function AdminSettings() {
 
       <div className="card p-5 space-y-4">
         <h3 className="font-bold text-gray-800">تنظیمات سفارش و قیمت</h3>
-        <div><label className="label">حداقل مبلغ سفارش (ریال)</label><input type="number" value={form.minOrderAmount} onChange={(e) => set('minOrderAmount', Number(e.target.value))} className="input" dir="ltr" /></div>
+        <div><label className="label">حداقل مبلغ سفارش (تومان)</label><input type="number" value={form.minOrderAmount} onChange={(e) => set('minOrderAmount', Number(e.target.value))} className="input" dir="ltr" /></div>
         <div><label className="label">درصد تخفیف پیش‌فرض</label><input type="number" value={form.defaultDiscountPercent} onChange={(e) => set('defaultDiscountPercent', Number(e.target.value))} className="input" dir="ltr" /></div>
         <label className="flex items-center gap-2 cursor-pointer">
           <input type="checkbox" checked={form.showMarketPrice} onChange={(e) => set('showMarketPrice', e.target.checked)} className="w-4 h-4 rounded text-primary-600" />

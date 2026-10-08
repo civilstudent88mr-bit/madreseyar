@@ -30,15 +30,15 @@ export default function AdminSales() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
         <div className="card p-4 bg-primary-50 border-primary-100">
           <p className="text-xs text-primary-600 mb-1">فروش امروز</p>
-          <p className="text-lg font-extrabold text-primary-700">{formatTomanShort(todayTotal)} ر</p>
+          <p className="text-lg font-extrabold text-primary-700">{formatTomanShort(todayTotal)} تومان</p>
         </div>
         <div className="card p-4 bg-success-50 border-success-100">
           <p className="text-xs text-success-600 mb-1">فروش این ماه شمسی</p>
-          <p className="text-lg font-extrabold text-success-700">{formatTomanShort(monthTotal)} ر</p>
+          <p className="text-lg font-extrabold text-success-700">{formatTomanShort(monthTotal)} تومان</p>
         </div>
         <div className="card p-4 bg-accent-50 border-accent-100">
           <p className="text-xs text-accent-600 mb-1">فروش کل</p>
-          <p className="text-lg font-extrabold text-accent-700">{formatTomanShort(allTotal)} ر</p>
+          <p className="text-lg font-extrabold text-accent-700">{formatTomanShort(allTotal)} تومان</p>
         </div>
       </div>
 
@@ -71,15 +71,15 @@ export default function AdminSales() {
                 <tr key={r.id} className="border-t border-gray-100 hover:bg-gray-50">
                   <td className="px-4 py-3 font-medium text-gray-800">{r.name}</td>
                   <td className="px-4 py-3">
-                    <span className="font-bold text-gray-800">{formatTomanShort(r.todayAmount)} ر</span>
+                    <span className="font-bold text-gray-800">{formatTomanShort(r.todayAmount)} تومان</span>
                     <span className="text-xs text-gray-400 block">{toPersianDigits(r.todayCount)} عدد</span>
                   </td>
                   <td className="px-4 py-3">
-                    <span className="font-bold text-gray-800">{formatTomanShort(r.monthAmount)} ر</span>
+                    <span className="font-bold text-gray-800">{formatTomanShort(r.monthAmount)} تومان</span>
                     <span className="text-xs text-gray-400 block">{toPersianDigits(r.monthCount)} عدد</span>
                   </td>
                   <td className="px-4 py-3">
-                    <span className="font-bold text-primary-700">{formatTomanShort(r.totalAmount)} ر</span>
+                    <span className="font-bold text-primary-700">{formatTomanShort(r.totalAmount)} تومان</span>
                     <span className="text-xs text-gray-400 block">{toPersianDigits(r.totalCount)} عدد</span>
                   </td>
                 </tr>
