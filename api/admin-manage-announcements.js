@@ -1,5 +1,7 @@
 const { createClient } = require('@supabase/supabase-js')
 
+const { isAdmin } = require('./_admin-auth')
+
 function json(res, status, body) {
   res.status(status).setHeader('Content-Type', 'application/json').send(JSON.stringify(body))
 }
@@ -7,7 +9,7 @@ function json(res, status, body) {
 module.exports = async function handler(req, res) {
   if (!['GET', 'POST'].includes(req.method)) return json(res, 405, { error: 'Method not allowed' })
   if (!process.env.AI_ADMIN_SECRET || !process.env.SUPABASE_SERVICE_ROLE_KEY) return json(res, 503, { error: 'Admin announcements are not configured in Vercel.' })
-  if (req.headers['x-admin-secret'] !== process.env.AI_ADMIN_SECRET) return json(res, 401, { error: 'Invalid admin secret' })
+  if (!isAdmin(req)) return json(res, 401, { error: 'Unauthorized' })
 
   try {
     const supabase = createClient(process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY, { auth: { persistSession: false } })

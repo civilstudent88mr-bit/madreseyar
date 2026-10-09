@@ -1,8 +1,8 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { CreditCard, Truck, Wallet, Building, Upload, CheckCircle2, ArrowLeft } from 'lucide-react'
 import { useCart } from '../../lib/cart'
-import { useAuth } from '../../lib/auth'
+import { normalizeMobile, useAuth } from '../../lib/auth'
 import { useToast } from '../../lib/toast'
 import { supabase } from '../../lib/supabase'
 import { formatToman, formatTomanShort, savedAmount } from '../../lib/format'
@@ -25,6 +25,15 @@ export default function Checkout() {
     paymentMethod: 'card_to_card' as const,
   })
 
+  useEffect(() => {
+    setForm((current) => ({
+      ...current,
+      deliveryAddress: school?.address ?? current.deliveryAddress,
+      receiverName: profile?.full_name ?? current.receiverName,
+      receiverMobile: profile?.mobile ?? current.receiverMobile,
+    }))
+  }, [profile?.full_name, profile?.mobile, school?.address])
+
   const subtotal = lines.reduce((s, l) => s + (l.product?.our_price ?? l.bundle?.our_total ?? 0) * l.qty, 0)
   const marketTotal = lines.reduce((s, l) => s + (l.product?.market_price ?? l.bundle?.market_total ?? 0) * l.qty, 0)
   const saved = savedAmount(marketTotal, subtotal)
@@ -34,6 +43,16 @@ export default function Checkout() {
   const submit = async () => {
     if (!profile?.school_id) { toast('error', 'اطلاعات حساب شما مشخص نیست'); return }
     setSubmitting(true)
+    const normalizedMobile = form.receiverMobile.replace(/[۰-۹]/g, (digit) => String('۰۱۲۳۴۵۶۷۸۹'.indexOf(digit))).replace(/[٠-٩]/g, (digit) => String('٠١٢٣٤٥٦٧٨٩'.indexOf(digit))).replace(/[\s-]/g, '')
+    const [profileUpdate, addressUpdate] = await Promise.all([
+      supabase.from('profiles').update({ full_name: form.receiverName.trim(), mobile: normalizedMobile }).eq('id', profile.id),
+      supabase.from('schools').update({ principal_name: form.receiverName.trim(), name: form.receiverName.trim(), address: form.deliveryAddress.trim() }).eq('id', profile.school_id),
+    ])
+    if (profileUpdate.error || addressUpdate.error) {
+      setSubmitting(false)
+      toast('error', 'ذخیره اطلاعات گیرنده و نشانی انجام نشد؛ لطفاً دوباره تلاش کنید')
+      return
+    }
     const orderNumber = `MY-${todayJalaliShort().replace(/\//g, '')}-${Math.floor(Math.random() * 900000 + 100000)}`
     const { data: order, error } = await supabase.from('orders').insert({
       order_number: orderNumber,
@@ -51,7 +70,7 @@ export default function Checkout() {
       delivery_date_requested: form.deliveryDate || null,
       delivery_address: form.deliveryAddress,
       receiver_name: form.receiverName,
-      receiver_mobile: form.receiverMobile,
+      receiver_mobile: normalizeMobile(form.receiverMobile),
       notes: form.notes,
     }).select().single()
 

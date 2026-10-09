@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { persist } from 'zustand/middleware'
 import type { Product, Bundle } from './types'
 
 export type CartProduct = Product & { image?: string }
@@ -22,7 +23,7 @@ interface CartState {
   setHydrated: (h: boolean) => void
 }
 
-export const useCart = create<CartState>((set) => ({
+export const useCart = create<CartState>()(persist((set) => ({
   lines: [],
   hydrated: false,
   setLines: (lines) => set({ lines }),
@@ -53,4 +54,8 @@ export const useCart = create<CartState>((set) => ({
   remove: (id) => set((s) => ({ lines: s.lines.filter((l) => l.id !== id) })),
   clear: () => set({ lines: [] }),
   setHydrated: (h) => set({ hydrated: h }),
+}), {
+  name: 'healthcare-cart-v1',
+  partialize: (state) => ({ lines: state.lines }) as CartState,
+  onRehydrateStorage: () => (state) => state?.setHydrated(true),
 }))

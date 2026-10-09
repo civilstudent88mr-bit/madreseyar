@@ -1,4 +1,5 @@
 ﻿const { createClient } = require('@supabase/supabase-js')
+const { isAdmin } = require('./_admin-auth')
 function json(res, status, body) { res.status(status).setHeader('Content-Type', 'application/json').send(JSON.stringify(body)) }
 function isUuid(value) { return typeof value === 'string' && /^[0-9a-f-]{36}$/i.test(value) }
 function slugify(value) { return String(value).trim().toLowerCase().replace(/[^\p{L}\p{N}]+/gu, '-').replace(/^-+|-+$/g, '') || `product-${Date.now()}` }
@@ -6,7 +7,7 @@ function imageExtension(dataUrl) { const match = /^data:image\/(jpeg|png|webp);b
 module.exports = async function handler(req, res) {
   if (req.method !== 'POST') return json(res, 405, { error: 'Method not allowed' })
   if (!process.env.AI_ADMIN_SECRET || !process.env.SUPABASE_SERVICE_ROLE_KEY) return json(res, 503, { error: 'Admin catalog service is not configured in Vercel.' })
-  if (req.headers['x-admin-secret'] !== process.env.AI_ADMIN_SECRET) return json(res, 401, { error: 'Invalid admin secret' })
+  if (!isAdmin(req)) return json(res, 401, { error: 'Unauthorized' })
   const input = req.body?.product
   if (!input || typeof input.name !== 'string' || input.name.trim().length < 2) return json(res, 400, { error: 'Product name is required' })
   if (![input.marketPrice, input.ourPrice].every((price) => typeof price === 'number' && Number.isFinite(price) && price >= 0)) return json(res, 400, { error: 'قیمت‌ها باید عدد نامنفی و به تومان باشند' })

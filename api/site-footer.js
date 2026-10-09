@@ -1,5 +1,7 @@
 const { createClient } = require('@supabase/supabase-js')
 
+const { isAdmin } = require('./_admin-auth')
+
 function json(res, status, body) {
   res.setHeader('Cache-Control', 'no-store')
   return res.status(status).setHeader('Content-Type', 'application/json; charset=utf-8').send(JSON.stringify(body))
@@ -8,7 +10,7 @@ function json(res, status, body) {
 module.exports = async function handler(req, res) {
   if (!['GET', 'POST'].includes(req.method)) return json(res, 405, { error: 'Method not allowed' })
   if (!process.env.SUPABASE_SERVICE_ROLE_KEY) return json(res, 503, { error: 'Site settings are not configured.' })
-  if (req.method === 'POST' && (!process.env.AI_ADMIN_SECRET || req.headers['x-admin-secret'] !== process.env.AI_ADMIN_SECRET)) {
+  if (req.method === 'POST' && !isAdmin(req)) {
     return json(res, process.env.AI_ADMIN_SECRET ? 401 : 503, { error: 'Invalid or missing admin configuration.' })
   }
 

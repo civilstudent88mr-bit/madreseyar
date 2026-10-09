@@ -1,5 +1,7 @@
-import { createContext, useContext, useEffect, useState, useCallback, type ReactNode } from 'react'
+import { createContext, useContext, useEffect, useState, useCallback, useRef, type ReactNode } from 'react'
+import type { AuthChangeEvent, Session } from '@supabase/supabase-js'
 import type { Profile, School } from './types'
+import { supabase } from './supabase'
 
 export type UserRole = 'admin' | 'school'
 
@@ -13,252 +15,189 @@ export interface AppUser {
   status: 'approved' | 'pending_review' | 'rejected'
 }
 
-export interface AuthSession {
-  userId: string
-  role: UserRole
-}
-
-interface LegacySession {
-  user: { id: string }
-}
-
 interface AuthState {
   user: AppUser | null
   profile: Profile | null
   school: School | null
-  session: LegacySession | null
+  session: { user: { id: string } } | null
   loading: boolean
   refreshProfile: () => Promise<void>
-  loginWithPassword: (mobile: string, password: string) => boolean
+  loginWithPassword: (mobile: string, password: string) => Promise<boolean>
   requestOtp: (mobile: string) => string | null
   verifyOtp: (mobile: string, code: string) => boolean
-  registerSchool: (data: { schoolName: string; name: string; mobile: string; password: string }) => boolean
+  registerSchool: (data: { schoolName: string; name: string; mobile: string; password: string; address: string; city: string; province: string; postalCode: string }) => Promise<boolean>
   resetPassword: (mobile: string, newPassword: string) => boolean
   signOut: () => void
 }
 
 const AuthContext = createContext<AuthState>({
-  user: null,
-  profile: null,
-  school: null,
-  session: null,
-  loading: true,
-  refreshProfile: async () => {},
-  loginWithPassword: () => false,
-  requestOtp: () => null,
-  verifyOtp: () => false,
-  registerSchool: () => false,
-  resetPassword: () => false,
-  signOut: () => {},
+  user: null, profile: null, school: null, session: null, loading: true,
+  refreshProfile: async () => {}, loginWithPassword: async () => false,
+  requestOtp: () => null, verifyOtp: () => false, registerSchool: async () => false,
+  resetPassword: () => false, signOut: () => {},
 })
 
-const STORAGE_KEY = 'healthcare-v1'
-const ADMIN_MOBILE = '09120000000'
-const ADMIN_MOBILE_ALIASES = new Set(['091200000', ADMIN_MOBILE])
-
-interface StoredData {
-  users: AppUser[]
-  session: AuthSession | null
-  otp: Record<string, { code: string; expires: number }>
+function legacyNormalizeMobile(value: string): string {
+  return value
+    .replace(/[۰-۹]/g, (digit) => String('۰۱۲۳۴۵۶۷۸۹'.indexOf(digit)))
+    .replace(/[٠-٩]/g, (digit) => String('٠١٢٣٤٥٦٧٨٩'.indexOf(digit)))
+    .replace(/[\s-]/g, '')
 }
 
-function normalizeMobile(v: string): string {
-  return v
-    .replace(/[۰-۹]/g, (d) => String('۰۱۲۳۴۵۶۷۸۹'.indexOf(d)))
-    .replace(/[٠-٩]/g, (d) => String('٠١٢٣٤٥٦٧٨٩'.indexOf(d)))
-    .replace(/[\s\-]/g, '')
+function normalizeMobile(value: string): string {
+  return Array.from(value, (digit) => {
+    const code = digit.codePointAt(0)!
+    if (code >= 0x06f0 && code <= 0x06f9) return String(code - 0x06f0)
+    if (code >= 0x0660 && code <= 0x0669) return String(code - 0x0660)
+    return digit
+  }).join('').replace(/[\s-]/g, '')
 }
 
-function loadData(): StoredData {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY)
-    if (raw) {
-      const parsed = JSON.parse(raw) as StoredData
-      if (parsed.users && Array.isArray(parsed.users)) return parsed
-    }
-  } catch { /* ignore */ }
-  return { users: [], session: null, otp: {} }
+export function customerAuthEmail(mobile: string) {
+  return `${normalizeMobile(mobile)}@accounts.healthcare24.ir`
 }
 
-function saveData(data: StoredData) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(data))
-}
-
-function seedDefaults(): StoredData {
-  const data = loadData()
-  if (data.users.length === 0) {
-    data.users = [
-      {
-        id: 'admin-1',
-        role: 'admin',
-        mobile: ADMIN_MOBILE,
-        password: 'Admin1234',
-        name: 'مدیر سیستم',
-        schoolName: '',
-        status: 'approved',
-      },
-      {
-        id: 'school-1',
-        role: 'school',
-        mobile: '09121111111',
-        password: 'School123',
-        name: 'کاربر نمونه',
-        schoolName: 'داروخانه شهر',
-        status: 'approved',
-      },
-    ]
-    saveData(data)
-  } else if (!data.users.some((user) => ADMIN_MOBILE_ALIASES.has(user.mobile))) {
-    data.users.push({
-      id: 'admin-1',
-      role: 'admin',
-      mobile: ADMIN_MOBILE,
-      password: 'Admin1234',
-      name: 'مدیر سیستم',
-      schoolName: '',
-      status: 'approved',
-    })
-    saveData(data)
+function toUser(profile: Profile, school: School | null): AppUser {
+  return {
+    id: profile.id,
+    role: profile.role.startsWith('seller_') ? 'admin' : 'school',
+    mobile: profile.mobile || '',
+    password: '',
+    name: profile.full_name,
+    schoolName: school?.name || '',
+    status: school?.status || 'approved',
   }
-  return data
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AppUser | null>(null)
+  const [profile, setProfile] = useState<Profile | null>(null)
+  const [school, setSchool] = useState<School | null>(null)
+  const [session, setSession] = useState<{ user: { id: string } } | null>(null)
   const [loading, setLoading] = useState(true)
+  const userRef = useRef<AppUser | null>(null)
+  userRef.current = user
 
-  const profile: Profile | null = user ? {
-    id: user.id,
-    full_name: user.name,
-    mobile: user.mobile,
-    email: null,
-    role: user.role === 'admin' ? 'seller_admin' : 'school_admin',
-    school_id: user.role === 'school' ? user.id : null,
-    is_active: true,
-    created_at: '',
-    updated_at: '',
-  } : null
+  const loadCustomer = useCallback(async (authSession: Session | null) => {
+    if (!authSession?.user) {
+      setUser(null); setProfile(null); setSchool(null); setSession(null)
+      return
+    }
+    const { data: foundProfile, error } = await supabase.from('profiles').select('*').eq('id', authSession.user.id).maybeSingle()
+    if (error || !foundProfile || !foundProfile.is_active) {
+      setUser(null); setProfile(null); setSchool(null); setSession(null)
+      return
+    }
+    const foundSchool = foundProfile.school_id
+      ? await supabase.from('schools').select('*').eq('id', foundProfile.school_id).maybeSingle()
+      : { data: null }
+    const profileValue = foundProfile as Profile
+    const schoolValue = foundSchool.data as School | null
+    setProfile(profileValue); setSchool(schoolValue); setUser(toUser(profileValue, schoolValue))
+    setSession({ user: { id: authSession.user.id } })
+  }, [])
 
-  const school: School | null = user?.role === 'school' ? {
-    id: user.id,
-    name: user.schoolName,
-    type: null,
-    province: null,
-    city: null,
-    address: null,
-    postal_code: null,
-    school_code: null,
-    principal_name: user.name,
-    landline: null,
-    status: user.status,
-    notes: null,
-    credit_limit: 0,
-    payment_terms: 'cash',
-    created_at: '',
-    updated_at: '',
-  } : null
-
-  const session: LegacySession | null = user ? { user: { id: user.id } } : null
-  const refreshProfile = useCallback(async () => {}, [])
+  const refreshProfile = useCallback(async () => {
+    const { data } = await supabase.auth.getSession()
+    await loadCustomer(data.session)
+  }, [loadCustomer])
 
   useEffect(() => {
-    const data = seedDefaults()
-    if (data.session) {
-      const u = data.users.find((x) => x.id === data.session!.userId)
-      if (u) setUser(u)
+    localStorage.removeItem('healthcare-v1')
+    let current = true
+    const check = async () => {
+      try {
+        const response = await fetch('/api/admin-auth', { credentials: 'same-origin' })
+        if (response.ok) {
+          const { mobile, name } = await response.json()
+          if (current) {
+            setUser({ id: 'admin-session', role: 'admin', mobile, password: '', name, schoolName: 'مدیریت Healthcare', status: 'approved' })
+            setProfile({ id: 'admin-session', full_name: name, mobile, email: null, role: 'seller_admin', school_id: null, is_active: true, created_at: '', updated_at: '' })
+            setSchool(null); setSession(null)
+          }
+        } else {
+          const { data } = await supabase.auth.getSession()
+          await loadCustomer(data.session)
+        }
+      } catch {
+        const { data } = await supabase.auth.getSession()
+        await loadCustomer(data.session)
+      } finally {
+        if (current) setLoading(false)
+      }
     }
-    setLoading(false)
-  }, [])
+    void check()
+    const { data: listener } = supabase.auth.onAuthStateChange((_event: AuthChangeEvent, authSession) => {
+      if (authSession) void loadCustomer(authSession)
+      else if (user?.role !== 'admin') { setUser(null); setProfile(null); setSchool(null); setSession(null) }
+    })
+    return () => { current = false; listener.subscription.unsubscribe() }
+  }, [loadCustomer])
 
-  const loginWithPassword = useCallback((mobile: string, password: string): boolean => {
-    const norm = normalizeMobile(mobile)
-    const data = loadData()
-    const u = data.users.find((x) => (x.mobile === norm || (ADMIN_MOBILE_ALIASES.has(norm) && ADMIN_MOBILE_ALIASES.has(x.mobile))) && x.password === password)
-    if (!u) return false
-    data.session = { userId: u.id, role: u.role }
-    saveData(data)
-    setUser(u)
-    return true
-  }, [])
-
-  const requestOtp = useCallback((mobile: string): string | null => {
-    const norm = normalizeMobile(mobile)
-    if (!/^09\d{7,9}$/.test(norm)) return null
-    const data = loadData()
-    const code = String(Math.floor(100000 + Math.random() * 900000))
-    data.otp = data.otp || {}
-    data.otp[norm] = { code, expires: Date.now() + 120000 }
-    saveData(data)
-    return code
-  }, [])
-
-  const verifyOtp = useCallback((mobile: string, code: string): boolean => {
-    const norm = normalizeMobile(mobile)
-    const data = loadData()
-    const entry = data.otp?.[norm]
-    if (!entry) return false
-    if (Date.now() > entry.expires) {
-      delete data.otp[norm]
-      saveData(data)
-      return false
+  const loginWithPassword = useCallback(async (mobile: string, password: string) => {
+    const normalized = normalizeMobile(mobile)
+    if (normalized === '09120000000') {
+      const { data, error } = await supabase.auth.signInWithPassword({ email: 'admin@demo.com', password })
+      if (error || !data.session) return false
+      const { data: adminProfile, error: profileError } = await supabase.from('profiles').select('role,is_active').eq('id', data.user.id).maybeSingle()
+      if (profileError || !adminProfile?.is_active || !String(adminProfile.role).startsWith('seller_')) {
+        await supabase.auth.signOut()
+        return false
+      }
+      const response = await fetch('/api/admin-auth', {
+        method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ accessToken: data.session.access_token }),
+      })
+      if (!response.ok) {
+        await supabase.auth.signOut()
+        return false
+      }
+      await loadCustomer(data.session)
+      return true
     }
-    if (entry.code !== code) return false
-    // OTP verified — find or create user
-    let u = data.users.find((x) => x.mobile === norm)
-    if (!u) return false // must be registered
-    delete data.otp[norm]
-    data.session = { userId: u.id, role: u.role }
-    saveData(data)
-    setUser(u)
-    return true
-  }, [])
-
-  const registerSchool = useCallback((data: { schoolName: string; name: string; mobile: string; password: string }): boolean => {
-    const norm = normalizeMobile(data.mobile)
-    const stored = loadData()
-    if (stored.users.some((x) => x.mobile === norm)) return false
-    const u: AppUser = {
-      id: `u${Date.now()}`,
-      role: 'school',
-      mobile: norm,
-      password: data.password,
-      name: data.name,
-      schoolName: data.schoolName,
-      status: 'pending_review',
+    if (normalized === '09120000000') {
+      const response = await fetch('/api/admin-auth', {
+        method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mobile: normalized, password }),
+      })
+      if (!response.ok) return false
+      const admin = await response.json()
+      setUser({ id: 'admin-session', role: 'admin', mobile: admin.mobile, password: '', name: admin.name, schoolName: 'مدیریت Healthcare', status: 'approved' })
+      setProfile({ id: 'admin-session', full_name: admin.name, mobile: admin.mobile, email: null, role: 'seller_admin', school_id: null, is_active: true, created_at: '', updated_at: '' })
+      setSchool(null); setSession(null)
+      return true
     }
-    stored.users.push(u)
-    stored.session = { userId: u.id, role: u.role }
-    saveData(stored)
-    setUser(u)
+    const { data, error } = await supabase.auth.signInWithPassword({ email: customerAuthEmail(normalized), password })
+    if (error) return false
+    await loadCustomer(data.session)
     return true
-  }, [])
+  }, [loadCustomer])
 
-  const resetPassword = useCallback((mobile: string, newPassword: string): boolean => {
-    const norm = normalizeMobile(mobile)
-    const data = loadData()
-    const u = data.users.find((x) => x.mobile === norm)
-    if (!u) return false
-    u.password = newPassword
-    saveData(data)
+  const registerSchool = useCallback(async (data: Parameters<AuthState['registerSchool']>[0]) => {
+    const response = await fetch('/api/customer-register', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ...data, mobile: normalizeMobile(data.mobile) }),
+    })
+    if (!response.ok) return false
+    const { error } = await supabase.auth.signInWithPassword({ email: customerAuthEmail(data.mobile), password: data.password })
+    if (error) return false
+    await refreshProfile()
     return true
-  }, [])
+  }, [refreshProfile])
 
   const signOut = useCallback(() => {
-    const data = loadData()
-    data.session = null
-    saveData(data)
-    setUser(null)
-  }, [])
+    if (user?.role === 'admin') {
+      void fetch('/api/admin-auth', { method: 'DELETE', credentials: 'same-origin' })
+      setUser(null); setProfile(null); setSchool(null); setSession(null)
+    } else void supabase.auth.signOut()
+  }, [user])
 
-  return (
-    <AuthContext.Provider value={{ user, profile, school, session, loading, refreshProfile, loginWithPassword, requestOtp, verifyOtp, registerSchool, resetPassword, signOut }}>
-      {children}
-    </AuthContext.Provider>
-  )
+  return <AuthContext.Provider value={{
+    user, profile, school, session, loading, refreshProfile, loginWithPassword,
+    requestOtp: () => null, verifyOtp: () => false, registerSchool,
+    resetPassword: () => false, signOut,
+  }}>{children}</AuthContext.Provider>
 }
 
-export function useAuth() {
-  return useContext(AuthContext)
-}
-
+export function useAuth() { return useContext(AuthContext) }
 export { normalizeMobile }

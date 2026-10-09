@@ -2,7 +2,6 @@ import { Routes, Route } from 'react-router-dom'
 import { useEffect } from 'react'
 import { AuthProvider } from './lib/auth'
 import { ToastProvider } from './lib/toast'
-import { CartSync } from './lib/cart-sync'
 import PublicLayout from './layouts/PublicLayout'
 import SchoolLayout from './layouts/SchoolLayout'
 import AdminLayout from './layouts/AdminLayout'
@@ -70,7 +69,6 @@ export default function App() {
   return (
     <AuthProvider>
       <ToastProvider>
-        <CartSync />
         <Routes>
           <Route element={<PublicLayout />}>
             <Route path="/" element={<Landing />} />

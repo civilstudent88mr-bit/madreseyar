@@ -14,7 +14,6 @@ export default function AdminProducts() {
   const [filterCat, setFilterCat] = useState('')
   const [editing, setEditing] = useState<StoreProduct | null>(null)
   const [showForm, setShowForm] = useState(false)
-  const [adminSecret, setAdminSecret] = useState(() => typeof window === 'undefined' ? '' : sessionStorage.getItem('healthcare-admin-secret') || '')
 
   const activeCategoryNames = categories.filter((c) => c.active).map((c) => c.name)
   const filtered = products.filter((p) => (!filterCat || p.category === filterCat) && (!search || p.name.includes(search) || p.sku.includes(search)))
@@ -54,10 +53,9 @@ export default function AdminProducts() {
       return
     }
     const localProduct = { ...editing, id: editing.id || `p${Date.now()}` }
-    if (adminSecret) {
       const response = await fetch('/api/admin-save-product', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'x-admin-secret': adminSecret },
+        credentials: 'same-origin', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ product: localProduct }),
       })
       const result = await response.json().catch(() => ({}))
@@ -68,19 +66,14 @@ export default function AdminProducts() {
       const saved = result.product
       upsertProduct({ ...localProduct, id: saved?.id || localProduct.id, image: result.image || localProduct.image })
       toast('success', 'محصول و تصویر در دیتابیس ذخیره شد')
-    } else {
-      upsertProduct(localProduct)
-      toast('success', 'کالا فقط روی این دستگاه ذخیره شد؛ برای ذخیره مرکزی کلید مدیریت را وارد کنید')
-    }
     setShowForm(false); setEditing(null)
   }
 
   const del = async (p: StoreProduct) => {
     if (!confirm(`حذف "${p.name}"؟`)) return
-    if (adminSecret) {
       const response = await fetch('/api/admin-delete-product', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'x-admin-secret': adminSecret },
+        credentials: 'same-origin', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ productId: p.id }),
       })
       if (!response.ok && response.status !== 404) {
@@ -88,9 +81,8 @@ export default function AdminProducts() {
         toast('error', result.error || 'حذف محصول از دیتابیس انجام نشد')
         return
       }
-    }
     deleteProduct(p.id)
-    toast('success', adminSecret ? 'کالا از دیتابیس و سایت حذف شد' : 'کالا از این دستگاه حذف شد؛ برای حذف مرکزی کلید مدیریت را وارد کنید')
+    toast('success', 'کالا از دیتابیس و سایت حذف شد')
   }
 
   const toggleActive = (p: StoreProduct) => {
@@ -110,11 +102,6 @@ export default function AdminProducts() {
         <button onClick={openNew} className="btn-primary py-2.5 px-4 text-sm"><Plus className="w-4 h-4" /> کالای جدید</button>
       </div>
 
-      <div className="card p-3 flex flex-wrap items-center gap-3">
-        <label className="text-sm font-bold text-gray-700">کلید مدیریت حذف مرکزی</label>
-        <input value={adminSecret} onChange={(e) => { setAdminSecret(e.target.value); sessionStorage.setItem('healthcare-admin-secret', e.target.value) }} type="password" placeholder="AI_ADMIN_SECRET در Vercel" className="input flex-1 min-w-[240px] py-2" autoComplete="off" />
-        <span className="text-xs text-gray-500">برای اینکه حذف روی همه دستگاه‌ها اعمال شود</span>
-      </div>
       <div className="flex gap-2 flex-wrap">
         <div className="relative flex-1 min-w-[200px]">
           <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="جستجو..." className="input pr-10 py-2.5" />

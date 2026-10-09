@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
+import { useNavigate, useLocation, Link } from 'react-router-dom'
 import { Package, Eye, EyeOff, RefreshCw } from 'lucide-react'
 import { useToast } from '../../lib/toast'
 import { useAuth, normalizeMobile } from '../../lib/auth'
@@ -21,6 +21,8 @@ function generateCaptcha(): string {
 
 export default function Register() {
   const navigate = useNavigate()
+  const location = useLocation()
+  const returnTo = (location.state as { from?: { pathname?: string } } | null)?.from?.pathname || '/app'
   const { toast } = useToast()
   const { registerSchool } = useAuth()
   const [show, setShow] = useState(false)
@@ -30,7 +32,7 @@ export default function Register() {
   const [captcha, setCaptcha] = useState(generateCaptcha())
   const [captchaInput, setCaptchaInput] = useState('')
   const [form, setForm] = useState({
-    schoolName: '', name: '', mobile: '', password: '', passwordRepeat: '',
+    schoolName: '', name: '', mobile: '', address: '', city: '', province: '', postalCode: '', password: '', passwordRepeat: '',
   })
 
   const set = (k: string, v: string) => setForm({ ...form, [k]: v })
@@ -40,7 +42,7 @@ export default function Register() {
     setCaptchaInput('')
   }, [])
 
-  const submit = (e: React.FormEvent) => {
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault()
 
     if (!agree) { toast('error', 'باید قوانین را تأیید کنید'); return }
@@ -55,18 +57,28 @@ export default function Register() {
     if (form.password !== form.passwordRepeat) { toast('error', 'رمز عبور و تکرار آن یکسان نیستند'); return }
 
     setLoading(true)
-    const ok = registerSchool({
-      schoolName: form.schoolName,
-      name: form.name,
-      mobile: normMobile,
-      password: form.password,
-    })
-    setLoading(false)
+    let ok = false
+    try {
+      ok = await registerSchool({
+        schoolName: form.name,
+        name: form.name,
+        mobile: normMobile,
+        address: form.address,
+        city: form.city,
+        province: form.province,
+        postalCode: form.postalCode,
+        password: form.password,
+      })
+    } catch {
+      toast('error', 'اتصال به سرور برقرار نشد؛ لطفاً دوباره تلاش کنید')
+    } finally {
+      setLoading(false)
+    }
 
     if (!ok) { toast('error', 'این شماره موبایل قبلاً ثبت شده است'); return }
 
-    toast('success', 'ثبت‌نام انجام شد. منتظر تأیید فروشنده باشید.')
-    navigate('/app')
+    toast('success', 'حساب کاربری شما ساخته شد')
+    navigate(returnTo, { replace: true })
   }
 
   return (
@@ -82,13 +94,15 @@ export default function Register() {
 
         <form onSubmit={submit} className="card p-6 space-y-4">
           <div>
-            <label className="label">نام مرکز</label>
-            <input required value={form.schoolName} onChange={(e) => set('schoolName', e.target.value)} className="input" placeholder="مثلاً داروخانه شهر" />
-          </div>
-          <div>
-            <label className="label">نام مدیر</label>
+            <label className="label">نام و نام خانوادگی</label>
             <input required value={form.name} onChange={(e) => set('name', e.target.value)} className="input" placeholder="نام و نام خانوادگی شما" />
           </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div><label className="label">استان</label><input required value={form.province} onChange={(e) => set('province', e.target.value)} className="input" /></div>
+            <div><label className="label">شهر</label><input required value={form.city} onChange={(e) => set('city', e.target.value)} className="input" /></div>
+          </div>
+          <div><label className="label">نشانی کامل برای ارسال</label><textarea required value={form.address} onChange={(e) => set('address', e.target.value)} className="input min-h-[80px]" /></div>
+          <div><label className="label">کد پستی</label><input value={form.postalCode} onChange={(e) => set('postalCode', e.target.value)} className="input" dir="ltr" maxLength={20} /></div>
           <div>
             <label className="label">شماره موبایل</label>
             <input required value={form.mobile} onChange={(e) => set('mobile', e.target.value)} className="input" placeholder="۰۹۱۲۳۴۵۶۷۸۹" dir="ltr" />

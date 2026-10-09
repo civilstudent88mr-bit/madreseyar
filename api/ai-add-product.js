@@ -1,4 +1,5 @@
 const { createClient } = require('@supabase/supabase-js')
+const { isAdmin } = require('./_admin-auth')
 const https = require('node:https')
 const dns = require('node:dns').promises
 const net = require('node:net')
@@ -162,7 +163,7 @@ module.exports = async function handler(req, res) {
   if (req.method !== 'POST') return json(res, 405, { error: 'Method not allowed' })
   const aiApiKey = process.env.AVALAI_API_KEY || process.env.OPENAI_API_KEY
   if (!process.env.AI_ADMIN_SECRET || !aiApiKey || !process.env.SUPABASE_SERVICE_ROLE_KEY) return json(res, 503, { error: 'AI service is not configured in Vercel.' })
-  if (req.headers['x-admin-secret'] !== process.env.AI_ADMIN_SECRET) return json(res, 401, { error: 'کلید دسترسی AI نامعتبر است' })
+  if (!isAdmin(req)) return json(res, 401, { error: 'نشست مدیر معتبر نیست' })
 
   const productName = typeof req.body?.productName === 'string' ? req.body.productName.trim() : ''
   const productDetails = typeof req.body?.productDetails === 'string' ? req.body.productDetails.trim() : ''

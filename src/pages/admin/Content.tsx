@@ -18,7 +18,6 @@ export default function AdminContent() {
   const { content, updateContent } = useStore()
   const { toast } = useToast()
   const [draft, setDraft] = useState<SiteContent>(content)
-  const [adminSecret, setAdminSecret] = useState(() => typeof window === 'undefined' ? '' : sessionStorage.getItem('healthcare-admin-secret') || '')
   const [saving, setSaving] = useState(false)
 
   useEffect(() => {
@@ -51,15 +50,11 @@ export default function AdminContent() {
   const removeFeature = (id: string) => setDraft((d) => ({ ...d, features: d.features.filter((f) => f.id !== id) }))
 
   const save = async () => {
-    if (!adminSecret) {
-      toast('error', 'برای ذخیره سراسری فوتر، AI_ADMIN_SECRET را وارد کنید.')
-      return
-    }
     setSaving(true)
     try {
       const response = await fetch('/api/site-footer', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'x-admin-secret': adminSecret },
+        credentials: 'same-origin', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           footer: { description: draft.footerText, phone: draft.footerPhone, hours: draft.footerHours },
           contact: { phone: draft.contactPhone, whatsapp: draft.contactWhatsapp, email: draft.contactEmail, address: draft.contactAddress },
@@ -68,7 +63,6 @@ export default function AdminContent() {
       const result = await response.json().catch(() => ({}))
       if (!response.ok) throw new Error(response.status === 401 ? 'کلید مدیریت اشتباه است.' : result.error || 'ذخیره فوتر انجام نشد.')
       updateContent(draft)
-      sessionStorage.setItem('healthcare-admin-secret', adminSecret)
       toast('success', 'متن فوتر، تلفن و ساعت کاری برای همه بازدیدکنندگان ذخیره شد.')
     } catch (error) {
       toast('error', error instanceof Error ? error.message : 'ذخیره تغییرات انجام نشد.')
@@ -86,7 +80,6 @@ export default function AdminContent() {
 
       <div className="card p-4 space-y-2">
         <label className="label">کلید مدیریت برای ذخیره تغییرات روی سایت</label>
-        <input type="password" value={adminSecret} onChange={(event) => setAdminSecret(event.target.value)} placeholder="AI_ADMIN_SECRET تنظیم‌شده در Vercel" className="input" autoComplete="off" />
       </div>
 
       <ToggleSection title="بخش هیرو (بنر اصلی)" show={draft.heroShow} onToggle={(v) => set('heroShow', v)}>

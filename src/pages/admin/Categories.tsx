@@ -3,6 +3,38 @@ import { Plus, Tags, Trash2, Edit, X, Save, Eye, EyeOff, ArrowUp, ArrowDown, Ima
 import { useStore, type StoreCategory } from '../../lib/store'
 import { useToast } from '../../lib/toast'
 
+async function toCompressedBanner(file: File) {
+  if (file.size > 12 * 1024 * 1024) throw new Error('حجم تصویر باید کمتر از ۱۲ مگابایت باشد.')
+  const bitmap = await createImageBitmap(file)
+  try {
+    const maxBytes = 850 * 1024
+    for (const scale of [1, 0.85, 0.72, 0.61, 0.52]) {
+      const ratio = Math.min(1, 1600 / Math.max(bitmap.width, bitmap.height)) * scale
+      const canvas = document.createElement('canvas')
+      canvas.width = Math.max(1, Math.round(bitmap.width * ratio))
+      canvas.height = Math.max(1, Math.round(bitmap.height * ratio))
+      const context = canvas.getContext('2d')
+      if (!context) throw new Error('فشرده‌سازی تصویر انجام نشد.')
+      context.drawImage(bitmap, 0, 0, canvas.width, canvas.height)
+
+      for (const quality of [0.84, 0.72, 0.6]) {
+        const blob = await new Promise<Blob>((resolve, reject) => canvas.toBlob((result) => result ? resolve(result) : reject(new Error('فشرده‌سازی تصویر انجام نشد.')), 'image/webp', quality))
+        if (blob.size <= maxBytes) {
+          return await new Promise<string>((resolve, reject) => {
+            const reader = new FileReader()
+            reader.onload = () => typeof reader.result === 'string' ? resolve(reader.result) : reject(new Error('خواندن تصویر انجام نشد.'))
+            reader.onerror = () => reject(new Error('خواندن تصویر انجام نشد.'))
+            reader.readAsDataURL(blob)
+          })
+        }
+      }
+    }
+  } finally {
+    bitmap.close()
+  }
+  throw new Error('فشرده‌سازی تصویر به اندازهٔ مجاز نرسید؛ تصویر دیگری انتخاب کنید.')
+}
+
 export default function AdminCategories() {
   const { categories, products, upsertCategory, deleteCategory } = useStore()
   const { toast } = useToast()
@@ -10,31 +42,26 @@ export default function AdminCategories() {
   const [name, setName] = useState('')
   const [slug, setSlug] = useState('')
   const [icon, setIcon] = useState('')
-  const [adminSecret, setAdminSecret] = useState(() => typeof window === 'undefined' ? '' : sessionStorage.getItem('healthcare-admin-secret') || '')
   const [uploadingId, setUploadingId] = useState<string | null>(null)
 
   const sorted = [...categories].sort((a, b) => a.order - b.order)
 
   const saveBanner = async (category: StoreCategory, file: File) => {
-    if (!adminSecret) { toast('error', 'Ù„Ø·ÙØ§Ù‹ Ú©Ù„ÛŒØ¯ Ù…Ø¯ÛŒØ±ÛŒØª Ø±Ø§ ÙˆØ§Ø±Ø¯ Ú©Ù†ÛŒØ¯'); return }
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) { toast('error', 'فرمت‌های JPG، PNG یا WEBP مجاز هستند.'); return }
+    if (file.size > 12 * 1024 * 1024) { toast('error', 'حجم تصویر باید کمتر از ۱۲ مگابایت باشد.'); return }
     if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) { toast('error', 'ÙÙ‚Ø· ÙØ§ÛŒÙ„ JPGØŒ PNG ÛŒØ§ WEBP Ù¾Ø°ÛŒØ±ÙØªÙ‡ Ù…ÛŒâ€ŒØ´ÙˆØ¯'); return }
-    if (file.size > 1024 * 1024) { toast('error', 'Ø­Ø¬Ù… Ø¨Ù†Ø± Ø¨Ø§ÛŒØ¯ Ú©Ù…ØªØ± Ø§Ø² Û± Ù…Ú¯Ø§Ø¨Ø§ÛŒØª Ø¨Ø§Ø´Ø¯'); return }
+    if (file.size > 12 * 1024 * 1024) { toast('error', 'Ø­Ø¬Ù… ØªØµÙˆÛŒØ± Ø¨Ø§ÛŒØ¯ Ú©Ù…ØªØ± Ø§Ø² Û±Û² Ù…Ú¯Ø§Ø¨Ø§ÛŒØª Ø¨Ø§Ø´Ø¯'); return }
 
     setUploadingId(category.id)
     try {
-      const image = await new Promise<string>((resolve, reject) => {
-        const reader = new FileReader()
-        reader.onload = () => typeof reader.result === 'string' ? resolve(reader.result) : reject(new Error('image'))
-        reader.onerror = () => reject(new Error('image'))
-        reader.readAsDataURL(file)
-      })
+      const image = await toCompressedBanner(file)
       const response = await fetch('/api/admin-save-category-banner', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'x-admin-secret': adminSecret },
+        credentials: 'same-origin', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ categoryId: category.id, category: { name: category.name, slug: category.slug, icon: category.icon, order: category.order, active: category.active }, image }),
       })
       const result = await response.json().catch(() => ({}))
-      if (!response.ok) throw new Error(result.error || 'Ù†Ø´Ø¯ Ø¨Ù†Ø± Ø±Ø§ Ø°Ø®ÛŒØ±Ù‡ Ú©Ø±Ø¯')
+      if (!response.ok) throw new Error(response.status === 401 ? 'کلید مدیریت اشتباه است؛ مقدار AI_ADMIN_SECRET را بررسی کنید.' : response.status === 503 ? 'تنظیم کلیدهای سرویس در Vercel ناقص است.' : result.error || 'آپلود در Supabase ناموفق بود؛ مخزن تصاویر را بررسی کنید.')
       upsertCategory({ ...category, id: result.categoryId, bannerUrl: result.bannerUrl })
       toast('success', 'Ø¨Ù†Ø± Ø¯Ø³ØªÙ‡ Ø°Ø®ÛŒØ±Ù‡ Ø´Ø¯')
     } catch (error) {
@@ -45,12 +72,12 @@ export default function AdminCategories() {
   }
 
   const removeBanner = async (category: StoreCategory) => {
-    if (!adminSecret || !category.bannerUrl) return
+    if (!category.bannerUrl) return
     setUploadingId(category.id)
     try {
       const response = await fetch('/api/admin-save-category-banner', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'x-admin-secret': adminSecret },
+        credentials: 'same-origin', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ categoryId: category.id, category: { name: category.name, slug: category.slug, icon: category.icon, order: category.order, active: category.active }, remove: true }),
       })
       const result = await response.json().catch(() => ({}))
@@ -116,7 +143,6 @@ export default function AdminCategories() {
 
       <div className="card p-4 space-y-2">
         <label className="label">کلید مدیریت برای بارگذاری بنرها</label>
-        <input value={adminSecret} onChange={(event) => { setAdminSecret(event.target.value); sessionStorage.setItem('healthcare-admin-secret', event.target.value) }} type="password" placeholder="AI_ADMIN_SECRET تنظیم‌شده در Vercel" className="input" autoComplete="off" />
         <p className="text-xs text-gray-500">همان کلیدی را وارد کنید که در بخش کالاها برای ذخیرهٔ مرکزی استفاده می‌کنید.</p>
       </div>
 
