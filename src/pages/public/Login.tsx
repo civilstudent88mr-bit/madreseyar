@@ -39,8 +39,8 @@ export default function Login() {
       refreshCaptcha()
       return
     }
-    const norm = normalizeMobile(mobile)
-    if (!/^09\d{7,9}$/.test(norm)) {
+    const norm = mobile.includes('@') ? mobile.trim().toLowerCase() : normalizeMobile(mobile)
+    if (norm.includes('@') ? !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(norm) : !/^09\d{9}$/.test(norm)) {
       toast('error', 'شماره موبایل معتبر نیست (مثال: ۰۹۱۲۳۴۵۶۷۸۹)')
       return
     }
@@ -51,7 +51,7 @@ export default function Login() {
       return
     }
     toast('success', 'خوش آمدید')
-    navigate(norm === '09120000000' ? '/admin' : returnTo, { replace: true })
+    navigate(norm.includes('@') || norm === '09120000000' ? '/admin' : returnTo, { replace: true })
   }
 
   return (
@@ -66,6 +66,7 @@ export default function Login() {
         </div>
 
         <form onSubmit={handlePasswordLogin} className="card p-6 space-y-4">
+            <p className="text-xs text-gray-500">برای ورود ادمین می‌توانید ایمیل حساب را به‌جای شماره موبایل وارد کنید.</p>
             <div>
               <label className="label">شماره موبایل</label>
               <div className="relative">

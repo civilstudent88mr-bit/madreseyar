@@ -109,6 +109,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       try {
         const response = await fetch('/api/admin-auth', { credentials: 'same-origin' })
         if (response.ok) {
+          const { data } = await supabase.auth.getSession()
+          await loadCustomer(data.session)
+          return
           const { mobile, name } = await response.json()
           if (current) {
             setUser({ id: 'admin-session', role: 'admin', mobile, password: '', name, schoolName: 'مدیریت Healthcare', status: 'approved' })
@@ -129,15 +132,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     void check()
     const { data: listener } = supabase.auth.onAuthStateChange((_event: AuthChangeEvent, authSession) => {
       if (authSession) void loadCustomer(authSession)
-      else if (user?.role !== 'admin') { setUser(null); setProfile(null); setSchool(null); setSession(null) }
+      else if (userRef.current?.role !== 'admin') { setUser(null); setProfile(null); setSchool(null); setSession(null) }
     })
     return () => { current = false; listener.subscription.unsubscribe() }
   }, [loadCustomer])
 
   const loginWithPassword = useCallback(async (mobile: string, password: string) => {
+    const identifier = mobile.trim()
     const normalized = normalizeMobile(mobile)
-    if (normalized === '09120000000') {
-      const { data, error } = await supabase.auth.signInWithPassword({ email: 'admin@demo.com', password })
+    if (identifier.includes('@') || normalized === '09120000000') {
+      const email = identifier.includes('@') ? identifier.toLowerCase() : 'admin@demo.com'
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password })
       if (error || !data.session) return false
       const { data: adminProfile, error: profileError } = await supabase.from('profiles').select('role,is_active').eq('id', data.user.id).maybeSingle()
       if (profileError || !adminProfile?.is_active || !String(adminProfile.role).startsWith('seller_')) {
@@ -188,6 +193,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signOut = useCallback(() => {
     if (user?.role === 'admin') {
       void fetch('/api/admin-auth', { method: 'DELETE', credentials: 'same-origin' })
+      void supabase.auth.signOut()
       setUser(null); setProfile(null); setSchool(null); setSession(null)
     } else void supabase.auth.signOut()
   }, [user])
