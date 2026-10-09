@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { ArrowLeft, ChevronLeft, Clock, Heart, Instagram, Megaphone, MessageCircle, Package, Search, ShieldCheck, Sparkles, Star, Truck, TrendingDown } from 'lucide-react'
+import { ArrowLeft, ChevronLeft, Clock, Heart, Instagram, Megaphone, MessageCircle, Package, Search, ShieldCheck, Star, Truck, TrendingDown } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import type { Announcement } from '../../lib/types'
 import { useStore, type StoreProduct } from '../../lib/store'
@@ -35,21 +35,10 @@ export default function Landing() {
       )}
 
       {content.heroShow && (
-        <section className="relative overflow-hidden bg-[#f3e6dc]">
-          <div className="absolute inset-0 bg-gradient-to-l from-[#f3e6dc]/95 via-[#f3e6dc]/45 to-transparent z-10" />
-          <img src={heroImage} alt="محصولات مراقبت از پوست" className="absolute inset-0 w-full h-full object-cover" />
-          <div className="relative z-20 max-w-7xl mx-auto px-4 py-16 sm:py-20 md:py-28 min-h-[430px] flex items-center">
-            <div className="max-w-xl mr-auto text-right">
-              {content.heroBadgeShow && <span className="inline-flex items-center gap-2 rounded-full bg-white/85 text-[#b85b50] px-4 py-2 text-xs font-bold shadow-sm mb-5"><Sparkles className="w-4 h-4" /> {content.heroBadgeText}</span>}
-              <h1 className="text-3xl sm:text-4xl md:text-6xl font-black text-[#3f2c29] leading-[1.25] mb-5">زیبایی تو،<br /><span className="text-[#d76d62]">انتخاب Healthcare</span></h1>
-              <p className="text-[#644b45] text-sm sm:text-base md:text-lg leading-8 max-w-lg mb-7">محصولات اصل مراقبت از پوست، آرایشی و بهداشتی را با خیال راحت انتخاب کن و با بهترین قیمت تحویل بگیر.</p>
-              <div className="flex flex-wrap gap-3 justify-start">
-                <Link to="/catalog" className="btn bg-[#d8665d] hover:bg-[#be554d] text-white px-7 py-3.5 shadow-lg shadow-[#d8665d]/20">مشاهده محصولات <ArrowLeft className="w-5 h-5" /></Link>
-                <Link to="/bundles" className="btn bg-white/90 text-[#6d4942] border border-white px-7 py-3.5">پکیج‌های ویژه</Link>
-              </div>
-            </div>
-          </div>
-          <div className="absolute bottom-4 left-1/2 z-20 -translate-x-1/2 flex gap-1.5"><span className="w-7 h-2 rounded-full bg-[#d8665d]" /><span className="w-2 h-2 rounded-full bg-white/80" /><span className="w-2 h-2 rounded-full bg-white/80" /></div>
+        <section className="relative bg-[#f3e6dc]">
+          <img src="/healthcare-home-banner.jpg" alt="بنر محصولات مراقبت از پوست و زیبایی Healthcare" className="block w-full h-auto" />
+          <Link to="/bundles" aria-label="مشاهده پکیج‌های ویژه" className="absolute left-[9.3%] top-[55.5%] z-10 h-[7%] w-[13.2%]" />
+          <Link to="/catalog" aria-label="مشاهده محصولات" className="absolute left-[24%] top-[55.5%] z-10 h-[7%] w-[18%]" />
         </section>
       )}
 
