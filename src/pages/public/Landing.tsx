@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { ArrowLeft, ChevronLeft, Clock, Heart, Instagram, Megaphone, Package, Search, ShieldCheck, Sparkles, Star, Truck, TrendingDown } from 'lucide-react'
+import { ArrowLeft, ChevronLeft, Clock, Heart, Instagram, Megaphone, MessageCircle, Package, Search, ShieldCheck, Sparkles, Star, Truck, TrendingDown } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import type { Announcement } from '../../lib/types'
 import { useStore, type StoreProduct } from '../../lib/store'
@@ -53,7 +53,17 @@ export default function Landing() {
         </section>
       )}
 
-      <section className="max-w-7xl mx-auto px-4 -mt-7 relative z-30">
+      <section className="max-w-7xl mx-auto px-4 pt-6 relative z-20">
+        <Link to="/ask-pharmacist" className="group flex flex-col sm:flex-row items-center justify-between gap-5 rounded-3xl border border-[#d8e8e3] bg-gradient-to-l from-[#eaf5f2] via-white to-[#fff3ef] p-5 sm:p-7 shadow-sm transition hover:shadow-md">
+          <div className="flex items-center gap-4 text-right">
+            <div className="w-14 h-14 shrink-0 rounded-2xl bg-[#0d5a52] text-white flex items-center justify-center"><MessageCircle className="w-7 h-7" /></div>
+            <div><p className="text-xs font-bold text-[#d8665d] mb-1">راهنمای انتخاب محصول</p><h2 className="text-xl sm:text-2xl font-black text-[#3f2c29]">از داروسازت بپرس</h2><p className="text-sm text-gray-600 mt-1">مشکلت را دربارهٔ پوست و مو بنویس یا صوتی بگو تا محصولات مرتبط سایت را پیدا کنیم.</p></div>
+          </div>
+          <span className="btn shrink-0 bg-[#0d5a52] text-white px-6 py-3">شروع گفتگو <ArrowLeft className="w-5 h-5" /></span>
+        </Link>
+      </section>
+
+      <section className="max-w-7xl mx-auto px-4 pt-5 relative z-30">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 rounded-2xl bg-white p-3 sm:p-4 shadow-xl shadow-[#7a5548]/10 border border-[#f1e7e1]">
           {[{ icon: ShieldCheck, title: 'تضمین اصالت', desc: 'خرید مطمئن' }, { icon: Truck, title: 'ارسال سریع', desc: 'به سراسر کشور' }, { icon: TrendingDown, title: 'قیمت اقتصادی', desc: 'تخفیف همیشگی' }, { icon: Heart, title: 'پشتیبانی همراه', desc: 'در کنار شما' }].map(({ icon: Icon, title, desc }) => <div key={title} className="flex items-center gap-2 sm:gap-3 p-2 sm:p-3 border-l last:border-l-0 border-[#eee2dc]"><div className="w-10 h-10 rounded-full bg-[#fce8e4] text-[#d8665d] flex items-center justify-center flex-shrink-0"><Icon className="w-5 h-5" /></div><div><p className="text-xs sm:text-sm font-bold text-[#493633]">{title}</p><p className="text-[10px] sm:text-xs text-gray-500 mt-0.5">{desc}</p></div></div>)}
         </div>

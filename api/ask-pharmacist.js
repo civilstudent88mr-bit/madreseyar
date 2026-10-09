@@ -124,6 +124,12 @@ module.exports = async function handler(req, res) {
       'فقط JSON معتبر با کلیدهای reply, follow_up_questions, recommendations, urgent برگردان. هیچ متن بیرون از JSON ننویس. اگر نشانهٔ خطر جدی یا نیازمند رسیدگی فوری مطرح شد urgent را true بگذار و recommendations را خالی کن. حداکثر سه محصول پیشنهاد بده و شناسهٔ آن‌ها باید دقیقاً در فهرست موجود باشد.',
     ].join('\n')
 
+    const responseGuidance = [
+      'Important hair-loss triage: a general statement such as "I have hair loss" or gradual/mild shedding is NOT by itself an urgent red flag. Do not answer only with a doctor referral in that case.',
+      'For ordinary gradual hair thinning, ask at most one concise relevant follow-up if it materially helps (for example duration, diffuse vs. patchy loss, or scalp irritation), and inspect the in-stock hair-care products. Recommend up to three relevant catalog products when available; describe them only as cosmetic/supportive care and never claim they treat alopecia or cure hair loss.',
+      'Recommend medical evaluation and set urgent=true only for clearly sudden, rapidly worsening, or patchy hair loss, or hair loss with significant scalp pain, inflammation, sores, discharge, or other severe symptoms. Do not classify routine gradual shedding as urgent.',
+      'When the user asks for a product, prefer a useful, evidence-bounded answer from the available catalog rather than a generic referral. Never invent usage instructions; use only the product record.',
+    ].join('\n')
     const aiResponse = await fetch(`${baseUrl}/chat/completions`, {
       method: 'POST',
       headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
@@ -132,7 +138,7 @@ module.exports = async function handler(req, res) {
         temperature: 0.2,
         max_tokens: 800,
         response_format: { type: 'json_object' },
-        messages: [{ role: 'system', content: system }, { role: 'user', content: prompt }],
+        messages: [{ role: 'system', content: `${system}\n${responseGuidance}` }, { role: 'user', content: prompt }],
       }),
     })
     if (!aiResponse.ok) throw new Error('ai')
