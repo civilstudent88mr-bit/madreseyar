@@ -9,12 +9,20 @@ import { useStore } from '../lib/store'
 export default function PublicLayout() {
   const { user, signOut } = useAuth()
   const { lines } = useCart()
-  const { content, appearance, categories } = useStore()
+  const { content, appearance, categories, updateContent } = useStore()
   const navigate = useNavigate()
   const [menuOpen, setMenuOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
   const [search, setSearch] = useState('')
   useEffect(() => { const onScroll = () => setScrolled(window.scrollY > 10); window.addEventListener('scroll', onScroll); return () => window.removeEventListener('scroll', onScroll) }, [])
+  useEffect(() => {
+    fetch('/api/site-footer').then(async (response) => {
+      if (!response.ok) return
+      const { footer } = await response.json()
+      if (!footer) return
+      updateContent({ ...content, footerText: footer.description ?? content.footerText, footerPhone: footer.phone ?? content.footerPhone, footerHours: footer.hours ?? content.footerHours })
+    }).catch(() => {})
+  }, [])
   const cartCount = lines.reduce((s, l) => s + l.qty, 0)
   const onSearch = (e: React.FormEvent) => { e.preventDefault(); if (search.trim()) navigate(`/catalog?q=${encodeURIComponent(search.trim())}`) }
   const dashboardLink = user?.role === 'admin' ? '/admin' : '/app'
@@ -31,7 +39,7 @@ export default function PublicLayout() {
       {menuOpen && <div className="md:hidden border-t border-[#f2e8e3] bg-white p-4 space-y-2"><form onSubmit={onSearch} className="relative mb-3"><input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="جستجو در محصولات..." className="input pr-10" /><Search className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" /></form><Link to="/catalog" onClick={() => setMenuOpen(false)} className="block p-2">همه محصولات</Link><Link to="/ask-pharmacist" onClick={() => setMenuOpen(false)} className="block p-2 text-[#0f766e] font-bold">از داروسازت بپرس</Link>{categories.filter((c) => c.active).map((cat) => <Link key={cat.id} to={`/catalog?category=${cat.slug}`} onClick={() => setMenuOpen(false)} className="block p-2">{cat.name}</Link>)}</div>}
     </header>
     <main className="flex-1"><Outlet /></main>
-    <footer className="bg-[#3f2c29] text-[#ead8d1] mt-0"><div className="max-w-7xl mx-auto px-4 py-12"><div className="grid grid-cols-2 md:grid-cols-4 gap-8"><div className="col-span-2 md:col-span-1"><div className="flex items-center gap-2 mb-4"><BrandMark className="w-10 h-10" /><span className="text-xl font-black text-white">{content.storeName}</span></div><p className="text-sm leading-7">{content.footerText}</p></div><div><h4 className="font-bold text-white mb-4">دسترسی سریع</h4><ul className="space-y-3 text-sm"><li><Link to="/catalog">محصولات</Link></li><li><Link to="/ask-pharmacist">از داروسازت بپرس</Link></li><li><Link to="/bundles">پکیج‌های ویژه</Link></li><li><Link to="/faq">سوالات متداول</Link></li></ul></div><div><h4 className="font-bold text-white mb-4">راهنما</h4><ul className="space-y-3 text-sm"><li><Link to="/how-it-works">چگونه کار می‌کند</Link></li><li><Link to="/register">ثبت‌نام</Link></li><li><Link to="/contact">تماس با ما</Link></li></ul></div><div><h4 className="font-bold text-white mb-4">با ما در ارتباط باشید</h4><p className="text-sm leading-7">تلفن: ۰۲۱-۹۱۰۰۰۰۰۰<br />شنبه تا پنجشنبه، ۹ تا ۱۸</p><div className="flex gap-2 mt-4"><span className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center"><Instagram className="w-4 h-4" /></span><span className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center"><Heart className="w-4 h-4" /></span></div></div></div><div className="border-t border-white/10 mt-10 pt-5 text-center text-xs text-[#bca39b]">© ۱۴۰۵ {content.storeName} - تمامی حقوق محفوظ است</div></div></footer>
+    <footer className="bg-[#3f2c29] text-[#ead8d1] mt-0"><div className="max-w-7xl mx-auto px-4 py-12"><div className="grid grid-cols-2 md:grid-cols-4 gap-8"><div className="col-span-2 md:col-span-1"><div className="flex items-center gap-2 mb-4"><BrandMark className="w-10 h-10" /><span className="text-xl font-black text-white">{content.storeName}</span></div><p className="text-sm leading-7">{content.footerText}</p></div><div><h4 className="font-bold text-white mb-4">دسترسی سریع</h4><ul className="space-y-3 text-sm"><li><Link to="/catalog">محصولات</Link></li><li><Link to="/ask-pharmacist">از داروسازت بپرس</Link></li><li><Link to="/bundles">پکیج‌های ویژه</Link></li><li><Link to="/faq">سوالات متداول</Link></li></ul></div><div><h4 className="font-bold text-white mb-4">راهنما</h4><ul className="space-y-3 text-sm"><li><Link to="/how-it-works">چگونه کار می‌کند</Link></li><li><Link to="/register">ثبت‌نام</Link></li><li><Link to="/contact">تماس با ما</Link></li></ul></div><div><h4 className="font-bold text-white mb-4">با ما در ارتباط باشید</h4><p className="text-sm leading-7"><a href={`tel:${content.footerPhone.replace(/[^+\d]/g, '')}`}>تلفن: {content.footerPhone}</a><br />{content.footerHours}</p><div className="flex gap-2 mt-4"><span className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center"><Instagram className="w-4 h-4" /></span><span className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center"><Heart className="w-4 h-4" /></span></div></div></div><div className="border-t border-white/10 mt-10 pt-5 text-center text-xs text-[#bca39b]">© ۱۴۰۵ {content.storeName} - تمامی حقوق محفوظ است</div></div></footer>
   </div>
 }
 

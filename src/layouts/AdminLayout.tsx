@@ -8,6 +8,7 @@ const navItems = [
   { to: '/admin', icon: LayoutDashboard, label: 'داشبورد', end: true },
   { to: '/admin/settings', icon: Settings, label: 'تنظیمات اپ' },
   { to: '/admin/content', icon: Megaphone, label: 'محتوا و تبلیغات' },
+  { to: '/admin/announcements', icon: Megaphone, label: 'اطلاعیه‌ها' },
   { to: '/admin/appearance', icon: Palette, label: 'ظاهر اپ' },
   { to: '/admin/products', icon: Package, label: 'کالاها' },
   { to: '/admin/ai-add', icon: BrainCircuit, label: 'AI Product' },

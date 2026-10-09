@@ -101,6 +101,8 @@ export interface SiteContent {
   features: FeatureCard[]
   featuresShow: boolean
   footerText: string
+  footerPhone: string
+  footerHours: string
   footerShow: boolean
   priceDisclaimer: string
   priceDisclaimerShow: boolean
@@ -251,6 +253,8 @@ const defaultContent: SiteContent = {
   ],
   featuresShow: true,
   footerText: 'فروشگاه آنلاین محصولات مراقبت از پوست، آرایشی، بهداشتی و مکمل با قیمت مناسب و تضمین اصالت کالا.',
+  footerPhone: '021-91000000',
+  footerHours: 'شنبه تا پنجشنبه، ۹ تا ۱۸',
   footerShow: true,
   priceDisclaimer: 'قیمت‌ها تقریبی است و ممکن است تغییر کند. ما تلاش می‌کنیم همیشه شفاف و صادق باشیم.',
   priceDisclaimerShow: true,

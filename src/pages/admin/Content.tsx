@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Save, Eye, EyeOff, Plus, Trash2 } from 'lucide-react'
 import { useStore, type SiteContent, type FeatureCard } from '../../lib/store'
 import { useToast } from '../../lib/toast'
@@ -18,6 +18,18 @@ export default function AdminContent() {
   const { content, updateContent } = useStore()
   const { toast } = useToast()
   const [draft, setDraft] = useState<SiteContent>(content)
+  const [adminSecret, setAdminSecret] = useState(() => typeof window === 'undefined' ? '' : sessionStorage.getItem('healthcare-admin-secret') || '')
+  const [saving, setSaving] = useState(false)
+
+  useEffect(() => {
+    fetch('/api/site-footer').then(async (response) => {
+      if (!response.ok) throw new Error('تنظیمات فوتر بارگذاری نشد.')
+      const { footer } = await response.json()
+      if (!footer) return
+      setDraft((current) => ({ ...current, footerText: footer.description ?? current.footerText, footerPhone: footer.phone ?? current.footerPhone, footerHours: footer.hours ?? current.footerHours }))
+      updateContent({ ...content, footerText: footer.description ?? content.footerText, footerPhone: footer.phone ?? content.footerPhone, footerHours: footer.hours ?? content.footerHours })
+    }).catch(() => toast('error', 'دریافت تنظیمات فوتر از سرور ناموفق بود.'))
+  }, [])
 
   const set = <K extends keyof SiteContent>(key: K, val: SiteContent[K]) => setDraft((d) => ({ ...d, [key]: val }))
 
@@ -28,16 +40,40 @@ export default function AdminContent() {
 
   const removeFeature = (id: string) => setDraft((d) => ({ ...d, features: d.features.filter((f) => f.id !== id) }))
 
-  const save = () => {
-    updateContent(draft)
-    toast('success', 'محتوا ذخیره شد و سایت به‌روزرسانی شد')
+  const save = async () => {
+    if (!adminSecret) {
+      toast('error', 'برای ذخیره سراسری فوتر، AI_ADMIN_SECRET را وارد کنید.')
+      return
+    }
+    setSaving(true)
+    try {
+      const response = await fetch('/api/site-footer', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-admin-secret': adminSecret },
+        body: JSON.stringify({ footer: { description: draft.footerText, phone: draft.footerPhone, hours: draft.footerHours } }),
+      })
+      const result = await response.json().catch(() => ({}))
+      if (!response.ok) throw new Error(response.status === 401 ? 'کلید مدیریت اشتباه است.' : result.error || 'ذخیره فوتر انجام نشد.')
+      updateContent(draft)
+      sessionStorage.setItem('healthcare-admin-secret', adminSecret)
+      toast('success', 'متن فوتر، تلفن و ساعت کاری برای همه بازدیدکنندگان ذخیره شد.')
+    } catch (error) {
+      toast('error', error instanceof Error ? error.message : 'ذخیره تغییرات انجام نشد.')
+    } finally {
+      setSaving(false)
+    }
   }
 
   return (
     <div className="space-y-5 max-w-3xl">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-extrabold text-gray-800">محتوا و تبلیغات</h1>
-        <button onClick={save} className="btn-primary py-2.5 px-5"><Save className="w-4 h-4" /> ذخیره</button>
+        <button onClick={() => void save()} disabled={saving} className="btn-primary py-2.5 px-5"><Save className="w-4 h-4" /> {saving ? 'در حال ذخیره…' : 'ذخیره'}</button>
+      </div>
+
+      <div className="card p-4 space-y-2">
+        <label className="label">کلید مدیریت برای ذخیره تغییرات روی سایت</label>
+        <input type="password" value={adminSecret} onChange={(event) => setAdminSecret(event.target.value)} placeholder="AI_ADMIN_SECRET تنظیم‌شده در Vercel" className="input" autoComplete="off" />
       </div>
 
       <ToggleSection title="بخش هیرو (بنر اصلی)" show={draft.heroShow} onToggle={(v) => set('heroShow', v)}>
@@ -88,10 +124,12 @@ export default function AdminContent() {
       <ToggleSection title="فوتر" show={draft.footerShow} onToggle={(v) => set('footerShow', v)}>
         <Field label="نام فروشگاه" value={draft.storeName} onChange={(v) => set('storeName', v)} />
         <Field label="شعار کوتاه" value={draft.slogan} onChange={(v) => set('slogan', v)} />
-        <Area label="متن فوتر" value={draft.footerText} onChange={(v) => set('footerText', v)} />
+        <Area label="متن معرفی فروشگاه در فوتر" value={draft.footerText} onChange={(v) => set('footerText', v)} />
+        <Field label="شماره تلفن فوتر" value={draft.footerPhone} onChange={(v) => set('footerPhone', v)} />
+        <Field label="ساعت و روزهای پاسخ‌گویی" value={draft.footerHours} onChange={(v) => set('footerHours', v)} />
       </ToggleSection>
 
-      <button onClick={save} className="btn-primary w-full py-3"><Save className="w-4 h-4" /> ذخیره تغییرات</button>
+      <button onClick={() => void save()} disabled={saving} className="btn-primary w-full py-3"><Save className="w-4 h-4" /> {saving ? 'در حال ذخیره…' : 'ذخیره تغییرات'}</button>
     </div>
   )
 }
