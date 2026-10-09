@@ -24,10 +24,20 @@ export default function AdminContent() {
   useEffect(() => {
     fetch('/api/site-footer').then(async (response) => {
       if (!response.ok) throw new Error('تنظیمات فوتر بارگذاری نشد.')
-      const { footer } = await response.json()
-      if (!footer) return
-      setDraft((current) => ({ ...current, footerText: footer.description ?? current.footerText, footerPhone: footer.phone ?? current.footerPhone, footerHours: footer.hours ?? current.footerHours }))
-      updateContent({ ...content, footerText: footer.description ?? content.footerText, footerPhone: footer.phone ?? content.footerPhone, footerHours: footer.hours ?? content.footerHours })
+      const { footer, contact } = await response.json()
+      if (!footer && !contact) return
+      const remoteContent = {
+        ...content,
+        footerText: footer?.description ?? content.footerText,
+        footerPhone: footer?.phone ?? content.footerPhone,
+        footerHours: footer?.hours ?? content.footerHours,
+        contactPhone: contact?.phone ?? content.contactPhone,
+        contactWhatsapp: contact?.whatsapp ?? content.contactWhatsapp,
+        contactEmail: contact?.email ?? content.contactEmail,
+        contactAddress: contact?.address ?? content.contactAddress,
+      }
+      setDraft((current) => ({ ...current, ...remoteContent }))
+      updateContent(remoteContent)
     }).catch(() => toast('error', 'دریافت تنظیمات فوتر از سرور ناموفق بود.'))
   }, [])
 
@@ -50,7 +60,10 @@ export default function AdminContent() {
       const response = await fetch('/api/site-footer', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'x-admin-secret': adminSecret },
-        body: JSON.stringify({ footer: { description: draft.footerText, phone: draft.footerPhone, hours: draft.footerHours } }),
+        body: JSON.stringify({
+          footer: { description: draft.footerText, phone: draft.footerPhone, hours: draft.footerHours },
+          contact: { phone: draft.contactPhone, whatsapp: draft.contactWhatsapp, email: draft.contactEmail, address: draft.contactAddress },
+        }),
       })
       const result = await response.json().catch(() => ({}))
       if (!response.ok) throw new Error(response.status === 401 ? 'کلید مدیریت اشتباه است.' : result.error || 'ذخیره فوتر انجام نشد.')
@@ -128,6 +141,14 @@ export default function AdminContent() {
         <Field label="شماره تلفن فوتر" value={draft.footerPhone} onChange={(v) => set('footerPhone', v)} />
         <Field label="ساعت و روزهای پاسخ‌گویی" value={draft.footerHours} onChange={(v) => set('footerHours', v)} />
       </ToggleSection>
+
+      <div className="card p-5 space-y-3">
+        <h3 className="font-bold text-gray-800">اطلاعات صفحه تماس با ما</h3>
+        <Field label="شماره تلفن تماس" value={draft.contactPhone} onChange={(v) => set('contactPhone', v)} />
+        <Field label="شماره واتساپ" value={draft.contactWhatsapp} onChange={(v) => set('contactWhatsapp', v)} />
+        <Field label="ایمیل" value={draft.contactEmail} onChange={(v) => set('contactEmail', v)} />
+        <Area label="آدرس" value={draft.contactAddress} onChange={(v) => set('contactAddress', v)} />
+      </div>
 
       <button onClick={() => void save()} disabled={saving} className="btn-primary w-full py-3"><Save className="w-4 h-4" /> {saving ? 'در حال ذخیره…' : 'ذخیره تغییرات'}</button>
     </div>

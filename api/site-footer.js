@@ -17,21 +17,29 @@ module.exports = async function handler(req, res) {
     if (req.method === 'GET') {
       const { data, error } = await supabase.from('settings').select('value').eq('key', 'site_footer').maybeSingle()
       if (error) throw error
-      let footer = {}
-      try { footer = data?.value ? JSON.parse(data.value) : {} } catch { footer = {} }
-      return json(res, 200, { footer })
+      let stored = {}
+      try { stored = data?.value ? JSON.parse(data.value) : {} } catch { stored = {} }
+      const footer = stored.footer || (stored.description || stored.phone || stored.hours ? stored : {})
+      return json(res, 200, { footer, contact: stored.contact || {} })
     }
 
     const footer = req.body?.footer
-    if (!footer || typeof footer !== 'object' || Array.isArray(footer)) return json(res, 400, { error: 'Invalid footer settings.' })
-    const values = {
+    const contact = req.body?.contact
+    if (!footer || typeof footer !== 'object' || Array.isArray(footer) || !contact || typeof contact !== 'object' || Array.isArray(contact)) return json(res, 400, { error: 'Invalid site content settings.' })
+    const footerValues = {
       description: String(footer.description || '').trim().slice(0, 1000),
       phone: String(footer.phone || '').trim().slice(0, 40),
       hours: String(footer.hours || '').trim().slice(0, 240),
     }
-    const { error } = await supabase.from('settings').upsert({ key: 'site_footer', value: JSON.stringify(values) })
+    const contactValues = {
+      phone: String(contact.phone || '').trim().slice(0, 40),
+      whatsapp: String(contact.whatsapp || '').trim().slice(0, 40),
+      email: String(contact.email || '').trim().slice(0, 160),
+      address: String(contact.address || '').trim().slice(0, 500),
+    }
+    const { error } = await supabase.from('settings').upsert({ key: 'site_footer', value: JSON.stringify({ footer: footerValues, contact: contactValues }) })
     if (error) throw error
-    return json(res, 200, { footer: values })
+    return json(res, 200, { footer: footerValues, contact: contactValues })
   } catch (error) {
     console.error(error)
     return json(res, 500, { error: 'Could not load or save footer settings.' })

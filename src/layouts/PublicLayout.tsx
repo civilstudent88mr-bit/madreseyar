@@ -18,9 +18,18 @@ export default function PublicLayout() {
   useEffect(() => {
     fetch('/api/site-footer').then(async (response) => {
       if (!response.ok) return
-      const { footer } = await response.json()
-      if (!footer) return
-      updateContent({ ...content, footerText: footer.description ?? content.footerText, footerPhone: footer.phone ?? content.footerPhone, footerHours: footer.hours ?? content.footerHours })
+      const { footer, contact } = await response.json()
+      if (!footer && !contact) return
+      updateContent({
+        ...content,
+        footerText: footer?.description ?? content.footerText,
+        footerPhone: footer?.phone ?? content.footerPhone,
+        footerHours: footer?.hours ?? content.footerHours,
+        contactPhone: contact?.phone ?? content.contactPhone,
+        contactWhatsapp: contact?.whatsapp ?? content.contactWhatsapp,
+        contactEmail: contact?.email ?? content.contactEmail,
+        contactAddress: contact?.address ?? content.contactAddress,
+      })
     }).catch(() => {})
   }, [])
   const cartCount = lines.reduce((s, l) => s + l.qty, 0)

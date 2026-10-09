@@ -103,6 +103,10 @@ export interface SiteContent {
   footerText: string
   footerPhone: string
   footerHours: string
+  contactPhone: string
+  contactWhatsapp: string
+  contactEmail: string
+  contactAddress: string
   footerShow: boolean
   priceDisclaimer: string
   priceDisclaimerShow: boolean
@@ -255,6 +259,10 @@ const defaultContent: SiteContent = {
   footerText: 'فروشگاه آنلاین محصولات مراقبت از پوست، آرایشی، بهداشتی و مکمل با قیمت مناسب و تضمین اصالت کالا.',
   footerPhone: '021-91000000',
   footerHours: 'شنبه تا پنجشنبه، ۹ تا ۱۸',
+  contactPhone: '021-91000000',
+  contactWhatsapp: '09120000000',
+  contactEmail: 'info@healthcare.ir',
+  contactAddress: 'تهران، خیابان ولیعصر، پلاک ۱۲۰',
   footerShow: true,
   priceDisclaimer: 'قیمت‌ها تقریبی است و ممکن است تغییر کند. ما تلاش می‌کنیم همیشه شفاف و صادق باشیم.',
   priceDisclaimerShow: true,

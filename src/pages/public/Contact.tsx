@@ -2,8 +2,10 @@ import { useState } from 'react'
 import { Phone, Mail, MapPin, MessageCircle, Send } from 'lucide-react'
 import { useToast } from '../../lib/toast'
 import { Breadcrumbs } from '../../lib/ui'
+import { useStore } from '../../lib/store'
 
 export default function Contact() {
+  const content = useStore((state) => state.content)
   const { toast } = useToast()
   const [form, setForm] = useState({ name: '', school: '', phone: '', message: '' })
 
@@ -21,10 +23,10 @@ export default function Contact() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="space-y-4">
           {[
-            { icon: Phone, title: 'تلفن تماس', value: '۰۲۱-۹۱۰۰۰۰۰۰' },
-            { icon: MessageCircle, title: 'واتساپ', value: '۰۹۱۲۰۰۰۰۰۰۰' },
-            { icon: Mail, title: 'ایمیل', value: 'info@healthcare.ir' },
-            { icon: MapPin, title: 'آدرس', value: 'تهران، خیابان ولیعصر، پلاک ۱۲۰' },
+            { icon: Phone, title: 'تلفن تماس', value: content.contactPhone },
+            { icon: MessageCircle, title: 'واتساپ', value: content.contactWhatsapp },
+            { icon: Mail, title: 'ایمیل', value: content.contactEmail },
+            { icon: MapPin, title: 'آدرس', value: content.contactAddress },
           ].map((c, i) => (
             <div key={i} className="card p-4 flex items-center gap-4">
               <div className="w-12 h-12 rounded-xl bg-primary-50 flex items-center justify-center flex-shrink-0">
