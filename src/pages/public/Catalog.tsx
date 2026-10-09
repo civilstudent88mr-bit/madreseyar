@@ -39,6 +39,7 @@ export default function Catalog() {
 
   return <div className="max-w-7xl mx-auto px-4 py-6">
     <Breadcrumbs items={[{ label: 'خانه', to: '/' }, { label: activeCategory?.name ?? 'محصولات' }]} />
+    {activeCategory?.bannerUrl && <div className="mb-5 overflow-hidden rounded-2xl"><img src={activeCategory.bannerUrl} alt={activeCategory.name} className="max-h-80 w-full object-cover" /></div>}
     <div className="flex flex-col md:flex-row gap-6">
       <aside className={cn('md:w-64 flex-shrink-0', showFilters ? 'block' : 'hidden md:block')}><div className="card p-4 space-y-5 sticky top-20">
         <div><h3 className="font-bold text-sm text-gray-800 mb-3">دسته‌بندی‌ها</h3><div className="space-y-1"><button onClick={() => setCategory('')} className={cn('w-full text-right px-3 py-2 rounded-lg text-sm', !categorySlug ? 'bg-primary-50 text-primary-700 font-medium' : 'text-gray-600 hover:bg-gray-50')}>همه محصولات</button>{activeCategories.map((c) => <button key={c.id} onClick={() => setCategory(c.slug)} className={cn('w-full text-right px-3 py-2 rounded-lg text-sm flex items-center gap-2', categorySlug === c.slug ? 'bg-primary-50 text-primary-700 font-medium' : 'text-gray-600 hover:bg-gray-50')}><span>{c.icon}</span>{c.name}</button>)}</div></div>

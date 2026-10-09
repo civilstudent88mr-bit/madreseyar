@@ -30,6 +30,7 @@ export interface StoreCategory {
   icon: string
   order: number
   active: boolean
+  bannerUrl?: string
 }
 
 export interface StockMove {
@@ -312,7 +313,7 @@ export const useStore = create<StoreState>((set, get) => ({
   syncCatalog: async () => {
     const [{ data: remoteProducts, error: productsError }, { data: remoteCategories, error: categoriesError }] = await Promise.all([
       supabase.from('products').select('*, categories(name, slug), product_images(url, sort_order)').eq('is_active', true).order('created_at', { ascending: false }),
-      supabase.from('categories').select('id, name, slug, icon, sort_order, is_active').eq('is_active', true).order('sort_order'),
+      supabase.from('categories').select('id, name, slug, icon, sort_order, is_active, banner_url').eq('is_active', true).order('sort_order'),
     ])
     if (productsError || categoriesError || !remoteProducts?.length) return
     const products = remoteProducts.map((remote: any): StoreProduct => ({
@@ -343,6 +344,7 @@ export const useStore = create<StoreState>((set, get) => ({
       icon: remote.icon || 'package',
       order: Number(remote.sort_order) || 0,
       active: Boolean(remote.is_active),
+      bannerUrl: remote.banner_url || undefined,
     }))
     set({ products, categories })
     persistStore({ products, categories })
@@ -389,8 +391,8 @@ export const useStore = create<StoreState>((set, get) => ({
   }),
 
   upsertCategory: (category) => set((s) => {
-    const exists = s.categories.some((c) => c.id === category.id)
-    const categories = exists ? s.categories.map((c) => c.id === category.id ? category : c) : [...s.categories, category].sort((a, b) => a.order - b.order)
+    const existing = s.categories.find((c) => c.id === category.id || c.slug === category.slug)
+    const categories = existing ? s.categories.map((c) => c.id === existing.id ? category : c) : [...s.categories, category].sort((a, b) => a.order - b.order)
     persistStore({ categories })
     return { categories }
   }),

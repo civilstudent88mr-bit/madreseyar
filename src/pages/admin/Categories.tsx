@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { Plus, Tags, Trash2, Edit, X, Save, Eye, EyeOff, ArrowUp, ArrowDown } from 'lucide-react'
+import { useState, type ChangeEvent } from 'react'
+import { Plus, Tags, Trash2, Edit, X, Save, Eye, EyeOff, ArrowUp, ArrowDown, Image, Upload } from 'lucide-react'
 import { useStore, type StoreCategory } from '../../lib/store'
 import { useToast } from '../../lib/toast'
 
@@ -10,8 +10,59 @@ export default function AdminCategories() {
   const [name, setName] = useState('')
   const [slug, setSlug] = useState('')
   const [icon, setIcon] = useState('')
+  const [adminSecret, setAdminSecret] = useState(() => typeof window === 'undefined' ? '' : sessionStorage.getItem('healthcare-admin-secret') || '')
+  const [uploadingId, setUploadingId] = useState<string | null>(null)
 
   const sorted = [...categories].sort((a, b) => a.order - b.order)
+
+  const saveBanner = async (category: StoreCategory, file: File) => {
+    if (!adminSecret) { toast('error', 'Ù„Ø·ÙØ§Ù‹ Ú©Ù„ÛŒØ¯ Ù…Ø¯ÛŒØ±ÛŒØª Ø±Ø§ ÙˆØ§Ø±Ø¯ Ú©Ù†ÛŒØ¯'); return }
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) { toast('error', 'ÙÙ‚Ø· ÙØ§ÛŒÙ„ JPGØŒ PNG ÛŒØ§ WEBP Ù¾Ø°ÛŒØ±ÙØªÙ‡ Ù…ÛŒâ€ŒØ´ÙˆØ¯'); return }
+    if (file.size > 1024 * 1024) { toast('error', 'Ø­Ø¬Ù… Ø¨Ù†Ø± Ø¨Ø§ÛŒØ¯ Ú©Ù…ØªØ± Ø§Ø² Û± Ù…Ú¯Ø§Ø¨Ø§ÛŒØª Ø¨Ø§Ø´Ø¯'); return }
+
+    setUploadingId(category.id)
+    try {
+      const image = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader()
+        reader.onload = () => typeof reader.result === 'string' ? resolve(reader.result) : reject(new Error('image'))
+        reader.onerror = () => reject(new Error('image'))
+        reader.readAsDataURL(file)
+      })
+      const response = await fetch('/api/admin-save-category-banner', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-admin-secret': adminSecret },
+        body: JSON.stringify({ categoryId: category.id, category: { name: category.name, slug: category.slug, icon: category.icon, order: category.order, active: category.active }, image }),
+      })
+      const result = await response.json().catch(() => ({}))
+      if (!response.ok) throw new Error(result.error || 'Ù†Ø´Ø¯ Ø¨Ù†Ø± Ø±Ø§ Ø°Ø®ÛŒØ±Ù‡ Ú©Ø±Ø¯')
+      upsertCategory({ ...category, id: result.categoryId, bannerUrl: result.bannerUrl })
+      toast('success', 'Ø¨Ù†Ø± Ø¯Ø³ØªÙ‡ Ø°Ø®ÛŒØ±Ù‡ Ø´Ø¯')
+    } catch (error) {
+      toast('error', error instanceof Error ? error.message : 'Ù…Ø´Ú©Ù„ Ø¯Ø± Ø°Ø®ÛŒØ±Ù‡ Ø¨Ù†Ø±')
+    } finally {
+      setUploadingId(null)
+    }
+  }
+
+  const removeBanner = async (category: StoreCategory) => {
+    if (!adminSecret || !category.bannerUrl) return
+    setUploadingId(category.id)
+    try {
+      const response = await fetch('/api/admin-save-category-banner', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-admin-secret': adminSecret },
+        body: JSON.stringify({ categoryId: category.id, category: { name: category.name, slug: category.slug, icon: category.icon, order: category.order, active: category.active }, remove: true }),
+      })
+      const result = await response.json().catch(() => ({}))
+      if (!response.ok) throw new Error(result.error || 'Ù†Ø´Ø¯ Ø¨Ù†Ø± Ø±Ø§ Ø­Ø°Ù Ú©Ø±Ø¯')
+      upsertCategory({ ...category, id: result.categoryId, bannerUrl: undefined })
+      toast('success', 'Ø¨Ù†Ø± Ø¯Ø³ØªÙ‡ Ø­Ø°Ù Ø´Ø¯')
+    } catch (error) {
+      toast('error', error instanceof Error ? error.message : 'Ù…Ø´Ú©Ù„ Ø¯Ø± Ø­Ø°Ù Ø¨Ù†Ø±')
+    } finally {
+      setUploadingId(null)
+    }
+  }
 
   const reset = () => { setEditing(null); setName(''); setSlug(''); setIcon('') }
 
@@ -24,6 +75,7 @@ export default function AdminCategories() {
       icon: icon.trim(),
       order: editing?.order ?? categories.length,
       active: editing?.active ?? true,
+      bannerUrl: editing?.bannerUrl,
     }
     upsertCategory(cat)
     toast('success', editing ? 'دسته ویرایش شد' : 'دسته اضافه شد')
@@ -61,6 +113,12 @@ export default function AdminCategories() {
   return (
     <div className="space-y-4">
       <h1 className="text-xl font-extrabold text-gray-800">دسته‌بندی‌ها</h1>
+
+      <div className="card p-4 space-y-2">
+        <label className="label">کلید مدیریت برای بارگذاری بنرها</label>
+        <input value={adminSecret} onChange={(event) => { setAdminSecret(event.target.value); sessionStorage.setItem('healthcare-admin-secret', event.target.value) }} type="password" placeholder="AI_ADMIN_SECRET تنظیم‌شده در Vercel" className="input" autoComplete="off" />
+        <p className="text-xs text-gray-500">همان کلیدی را وارد کنید که در بخش کالاها برای ذخیرهٔ مرکزی استفاده می‌کنید.</p>
+      </div>
 
       <div className="card p-4 space-y-3">
         <div className="flex items-center justify-between">
@@ -101,6 +159,18 @@ export default function AdminCategories() {
                   </button>
                   <button onClick={() => startEdit(c)} className="btn-ghost p-1.5"><Edit className="w-4 h-4" /></button>
                   <button onClick={() => del(c)} className="btn-ghost p-1.5 text-error-600"><Trash2 className="w-4 h-4" /></button>
+                </div>
+              </div>
+              <div className="mt-3 space-y-2">
+                <div className="relative aspect-[2/1] overflow-hidden rounded-lg bg-gray-100">
+                  {c.bannerUrl ? <img src={c.bannerUrl} alt={`بنر ${c.name}`} className="h-full w-full object-cover" /> : <div className="flex h-full flex-col items-center justify-center gap-1 text-xs text-gray-400"><Image className="h-6 w-6" />هنوز بنری انتخاب نشده</div>}
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <label className="btn-secondary cursor-pointer py-2 px-3 text-xs">
+                    <Upload className="h-4 w-4" /> {uploadingId === c.id ? 'در حال بارگذاری…' : c.bannerUrl ? 'تعویض بنر' : 'انتخاب بنر'}
+                    <input type="file" accept="image/jpeg,image/png,image/webp" disabled={uploadingId === c.id} onChange={(event: ChangeEvent<HTMLInputElement>) => { const file = event.target.files?.[0]; if (file) void saveBanner(c, file); event.target.value = '' }} className="hidden" />
+                  </label>
+                  {c.bannerUrl && <button onClick={() => void removeBanner(c)} disabled={uploadingId === c.id} className="btn-ghost py-2 px-3 text-xs text-error-600">حذف بنر</button>}
                 </div>
               </div>
             </div>
