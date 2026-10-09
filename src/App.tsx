@@ -9,6 +9,7 @@ import AdminLayout from './layouts/AdminLayout'
 import Landing from './pages/public/Landing'
 import Catalog from './pages/public/Catalog'
 import ProductDetail from './pages/public/ProductDetail'
+import AskPharmacist from './pages/public/AskPharmacist'
 import Bundles from './pages/public/Bundles'
 import BundleDetail from './pages/public/BundleDetail'
 import FAQ from './pages/public/FAQ'
@@ -76,6 +77,7 @@ export default function App() {
             <Route path="/catalog" element={<Catalog />} />
             <Route path="/catalog/:category" element={<Catalog />} />
             <Route path="/product/:slug" element={<ProductDetail />} />
+            <Route path="/ask-pharmacist" element={<AskPharmacist />} />
             <Route path="/bundles" element={<Bundles />} />
             <Route path="/bundles/:id" element={<BundleDetail />} />
             <Route path="/faq" element={<FAQ />} />
