@@ -72,7 +72,14 @@ export default function Landing() {
         </div>
       </section>
 
-      <section className="max-w-7xl mx-auto px-4 py-14"><div className="rounded-3xl overflow-hidden min-h-[230px] relative bg-[#e7c2a4]"><img src={makeupImage} alt="پیشنهاد ویژه آرایشی" className="absolute inset-0 w-full h-full object-cover opacity-75" /><div className="absolute inset-0 bg-gradient-to-l from-[#f4dcc9] via-[#f4dcc9]/75 to-transparent" /><div className="relative p-8 sm:p-12 max-w-lg"><span className="text-xs font-bold text-[#bd6758]">پیشنهاد ویژه Healthcare</span><h2 className="text-2xl sm:text-3xl font-black text-[#4b3129] mt-2 mb-3">برای روتین زیبایی‌ات<br />یک انتخاب تازه بساز</h2><Link to="/catalog" className="btn bg-[#4b3129] text-white px-5 py-2.5">خرید کنید <ArrowLeft className="w-4 h-4" /></Link></div></div></section>
+      <section className="max-w-7xl mx-auto px-4 py-14">
+        <div className="relative aspect-[2.3/1] overflow-hidden rounded-3xl bg-[#f1d7bd]">
+          <img src="/beauty-routine-banner.png" alt="پیشنهاد Healthcare برای روتین زیبایی با محصولات مراقبت از پوست" className="absolute inset-0 h-full w-full object-cover object-center" />
+          <Link to="/catalog" aria-label="خرید محصولات و مشاهده کاتالوگ" className="absolute right-[3%] top-[51%] flex h-[18%] w-[24%] items-center justify-center gap-1 rounded-2xl bg-[#4b3129] px-2 text-xs font-bold text-white transition hover:bg-[#3f2c29] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#d8665d] sm:right-[4.1%] sm:top-[53.5%] sm:h-[11.5%] sm:w-[13.8%] sm:rounded-[24px] sm:text-sm md:text-base">
+            خرید کنید <ArrowLeft className="h-4 w-4 shrink-0" />
+          </Link>
+        </div>
+      </section>
 
       {content.featuresShow && content.features.some((feature) => feature.show) && <section className="max-w-7xl mx-auto px-4 pb-14"><div className="grid grid-cols-2 md:grid-cols-4 gap-3">{content.features.filter((feature) => feature.show).map((feature) => { const Icon = featureIcons[feature.icon as keyof typeof featureIcons] ?? Package; return <div key={feature.id} className="bg-white rounded-2xl p-4 text-center border border-[#f0e5df]"><div className="w-11 h-11 rounded-full bg-[#fce8e4] text-[#d8665d] flex items-center justify-center mx-auto mb-3"><Icon className="w-5 h-5" /></div><h3 className="font-bold text-sm text-[#493633]">{feature.title}</h3><p className="text-xs text-gray-500 mt-1">{feature.desc}</p></div> })}</div></section>}
 
