@@ -1,4 +1,4 @@
-import { Routes, Route } from 'react-router-dom'
+import { Routes, Route, useNavigate } from 'react-router-dom'
 import { useEffect } from 'react'
 import { AuthProvider } from './lib/auth'
 import { ToastProvider } from './lib/toast'
@@ -17,6 +17,7 @@ import HowItWorks from './pages/public/HowItWorks'
 import Login from './pages/public/Login'
 import Register from './pages/public/Register'
 import ForgotPassword from './pages/public/ForgotPassword'
+import ResetPassword from './pages/public/ResetPassword'
 import SchoolDashboard from './pages/school/Dashboard'
 import SchoolCatalog from './pages/school/Catalog'
 import Cart from './pages/school/Cart'
@@ -53,6 +54,23 @@ import { useStore } from './lib/store'
 import { applyAppearance } from './lib/theme'
 import AdminTickets from './pages/admin/Tickets'
 import NotFound from './pages/NotFound'
+import { supabase } from './lib/supabase'
+
+function RecoveryRedirect() {
+  const navigate = useNavigate()
+
+  useEffect(() => {
+    const { data: listener } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'PASSWORD_RECOVERY') {
+        sessionStorage.setItem('healthcare-password-recovery', '1')
+        navigate('/reset-password', { replace: true })
+      }
+    })
+    return () => listener.subscription.unsubscribe()
+  }, [navigate])
+
+  return null
+}
 
 export default function App() {
   const appearance = useStore((state) => state.appearance)
@@ -69,6 +87,7 @@ export default function App() {
   return (
     <AuthProvider>
       <ToastProvider>
+        <RecoveryRedirect />
         <Routes>
           <Route element={<PublicLayout />}>
             <Route path="/" element={<Landing />} />
@@ -84,6 +103,7 @@ export default function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
           </Route>
           <Route path="/app" element={<SchoolLayout />}>
             <Route index element={<SchoolDashboard />} />
