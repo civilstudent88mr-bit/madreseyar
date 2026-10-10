@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
-import { CheckCircle2, Clock3, CreditCard, ExternalLink, Upload } from 'lucide-react'
+import { Check, CheckCircle2, Clock3, Copy, CreditCard, ExternalLink, Upload } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/auth'
-import { formatToman } from '../lib/format'
+import { formatCardNumber, formatToman } from '../lib/format'
 
 type PaymentRow = {
   id: string
@@ -34,16 +34,19 @@ export default function PaymentReceiptUpload({ orderId, amount }: { orderId: str
   const [file, setFile] = useState<File | null>(null)
   const [loading, setLoading] = useState(true)
   const [uploading, setUploading] = useState(false)
+  const [copied, setCopied] = useState(false)
+  const [loadError, setLoadError] = useState('')
   const [error, setError] = useState('')
 
   useEffect(() => {
     let active = true
     void (async () => {
-      const [{ data: settings }, { data: payments }] = await Promise.all([
+      const [{ data: settings, error: settingsError }, { data: payments, error: paymentsError }] = await Promise.all([
         supabase.from('settings').select('key,value').in('key', Object.keys(emptyDetails)),
         supabase.from('payments').select('id,status,receipt_url,reference_code,note,created_at').eq('order_id', orderId).order('created_at', { ascending: false }).limit(1),
       ])
       if (!active) return
+      if (settingsError || paymentsError) setLoadError('دریافت اطلاعات پرداخت با مشکل روبه‌رو شد. صفحه را تازه کنید؛ اگر مشکل ادامه داشت با پشتیبانی تماس بگیرید.')
       const nextDetails = { ...emptyDetails }
       for (const row of settings ?? []) {
         if (row.key in nextDetails) nextDetails[row.key as keyof PaymentDetails] = row.value ?? ''
@@ -98,6 +101,16 @@ export default function PaymentReceiptUpload({ orderId, amount }: { orderId: str
     setUploading(false)
   }
 
+  const copyCardNumber = async () => {
+    try {
+      await navigator.clipboard.writeText(details.bank_card.replace(/\D/g, ''))
+      setCopied(true)
+      window.setTimeout(() => setCopied(false), 2000)
+    } catch {
+      setError('کپی خودکار انجام نشد؛ شماره کارت را دستی انتخاب کنید.')
+    }
+  }
+
   if (loading) return <div className="card p-4 text-sm text-gray-500">در حال دریافت اطلاعات پرداخت…</div>
 
   const canUpload = !payment || payment.status === 'rejected'
@@ -109,12 +122,13 @@ export default function PaymentReceiptUpload({ orderId, amount }: { orderId: str
     </div>
     <div className="rounded-xl bg-primary-50 p-4 space-y-2 text-sm">
       {details.bank_name && <p><span className="text-gray-500">بانک: </span><b>{details.bank_name}</b></p>}
-      <p><span className="text-gray-500">شماره کارت: </span><b dir="ltr">{details.bank_card || 'هنوز توسط فروشگاه ثبت نشده است'}</b></p>
+      <div className="flex flex-wrap items-center gap-2"><span className="text-gray-500">شماره کارت:</span><b className="font-mono tracking-wider" dir="ltr">{details.bank_card ? formatCardNumber(details.bank_card) : 'هنوز توسط فروشگاه ثبت نشده است'}</b>{details.bank_card && <button type="button" onClick={() => void copyCardNumber()} className="inline-flex items-center gap-1 rounded-lg bg-white px-2 py-1 text-xs text-primary-700">{copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}{copied ? 'کپی شد' : 'کپی شماره کارت'}</button>}</div>
       {details.sheba && <p><span className="text-gray-500">شماره شبا: </span><b dir="ltr">{details.sheba}</b></p>}
       {details.account_holder && <p><span className="text-gray-500">به نام: </span><b>{details.account_holder}</b></p>}
       <p><span className="text-gray-500">مبلغ سفارش: </span><b className="text-primary-800">{formatToman(amount)}</b></p>
       {details.payment_instructions && <p className="pt-2 border-t border-primary-100 leading-6">{details.payment_instructions}</p>}
     </div>
+    {loadError && <p role="alert" className="rounded-lg bg-amber-50 p-3 text-sm text-amber-800">{loadError}</p>}
 
     {payment?.status === 'confirmed' ? <p className="flex items-center gap-2 text-sm font-semibold text-green-700"><CheckCircle2 className="w-5 h-5" />رسید پرداخت شما تأیید شده است.</p> : payment?.status === 'pending_receipt' ? <div className="space-y-2">
       <p className="flex items-center gap-2 text-sm font-semibold text-amber-700"><Clock3 className="w-5 h-5" />رسید برای بررسی مدیر ارسال شده است.</p>

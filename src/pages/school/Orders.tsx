@@ -50,6 +50,7 @@ export default function Orders() {
               <div>
                 <p className="font-bold text-sm text-gray-800" dir="ltr">{o.order_number}</p>
                 <p className="text-xs text-gray-500">{formatJalaliDateShort(o.created_at)}</p>
+                {o.payment_method === 'card_to_card' && o.payment_status !== 'paid' && <p className="mt-1 text-xs font-semibold text-primary-700">کارت‌به‌کارت · برای ارسال رسید باز کنید</p>}
               </div>
               <div className="flex items-center gap-3">
                 <div className="text-left hidden sm:block">

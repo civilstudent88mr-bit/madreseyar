@@ -5,7 +5,7 @@ import { useCart } from '../../lib/cart'
 import { normalizeMobile, useAuth } from '../../lib/auth'
 import { useToast } from '../../lib/toast'
 import { supabase } from '../../lib/supabase'
-import { formatToman, formatTomanShort, savedAmount } from '../../lib/format'
+import { formatCardNumber, formatToman, formatTomanShort, savedAmount } from '../../lib/format'
 import { todayJalaliShort } from '../../lib/jalali'
 import PaymentReceiptUpload from '../../components/PaymentReceiptUpload'
 
@@ -220,7 +220,7 @@ export default function Checkout() {
                 <div className="bg-accent-50 border border-accent-200 rounded-xl p-4 text-sm">
                   <p className="font-bold text-accent-800 mb-1">اطلاعات حساب دریافت وجه</p>
                   {bankDetails.bank_name && <p className="text-accent-700">بانک: {bankDetails.bank_name}</p>}
-                  <p className="text-accent-700">شماره کارت: <span dir="ltr">{bankDetails.bank_card || 'هنوز توسط فروشگاه ثبت نشده است'}</span></p>
+                  <p className="text-accent-700">شماره کارت: <span className="font-mono tracking-wider" dir="ltr">{bankDetails.bank_card ? formatCardNumber(bankDetails.bank_card) : 'هنوز توسط فروشگاه ثبت نشده است'}</span></p>
                   {bankDetails.sheba && <p className="text-accent-700">شماره شبا: <span dir="ltr">{bankDetails.sheba}</span></p>}
                   {bankDetails.account_holder && <p className="text-accent-700">به نام: {bankDetails.account_holder}</p>}
                   {bankDetails.payment_instructions && <p className="text-xs text-accent-600 mt-2">{bankDetails.payment_instructions}</p>}

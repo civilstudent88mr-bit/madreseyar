@@ -12,6 +12,10 @@ export function toEnglishDigits(input: string): string {
     .replace(/[٠-٩]/g, (d) => String('٠١٢٣٤٥٦٧٨٩'.indexOf(d)))
 }
 
+export function formatCardNumber(input: string): string {
+  return toEnglishDigits(input).replace(/\D/g, '').slice(0, 16).replace(/(\d{4})(?=\d)/g, '$1 ')
+}
+
 export function formatToman(amount: number): string {
   const formatted = new Intl.NumberFormat('fa-IR').format(Math.round(amount))
   return `${formatted} تومان`
