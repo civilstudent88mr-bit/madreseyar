@@ -53,6 +53,7 @@ import AdminAppearance from './pages/admin/Appearance'
 import { useStore } from './lib/store'
 import { applyAppearance } from './lib/theme'
 import AdminTickets from './pages/admin/Tickets'
+import AdminFinance from './pages/admin/Finance'
 import NotFound from './pages/NotFound'
 import { supabase } from './lib/supabase'
 
@@ -133,6 +134,7 @@ export default function App() {
             <Route path="sales" element={<AdminSales />} />
             <Route path="submissions" element={<AdminSubmissions />} />
             <Route path="orders" element={<AdminOrders />} />
+            <Route path="finance" element={<AdminFinance />} />
             <Route path="orders/:id" element={<AdminOrderDetail />} />
             <Route path="schools" element={<AdminSchools />} />
             <Route path="schools/:id" element={<AdminSchoolDetail />} />

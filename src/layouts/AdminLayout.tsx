@@ -1,6 +1,6 @@
 import { Outlet, NavLink, Link, Navigate } from 'react-router-dom'
 import { useState } from 'react'
-import { LayoutDashboard, Settings, Package, Warehouse, FileText, ChartBar as BarChart3, Inbox, ClipboardList, Building2, SquareKanban as KanbanSquare, LogOut, Menu, X, Tags, Megaphone, Palette, BrainCircuit } from 'lucide-react'
+import { LayoutDashboard, Settings, Package, Warehouse, FileText, ChartBar as BarChart3, Inbox, ClipboardList, Building2, SquareKanban as KanbanSquare, LogOut, Menu, X, Tags, Megaphone, Palette, BrainCircuit, Wallet } from 'lucide-react'
 import { useAuth } from '../lib/auth'
 import { cn } from '../lib/cn'
 
@@ -18,6 +18,7 @@ const navItems = [
   { to: '/admin/sales', icon: BarChart3, label: 'گزارش فروش کالا' },
   { to: '/admin/submissions', icon: Inbox, label: 'کالاهای ثبت‌شده کاربران' },
   { to: '/admin/orders', icon: ClipboardList, label: 'سفارش‌ها' },
+  { to: '/admin/finance', icon: Wallet, label: 'امور مالی' },
   { to: '/admin/schools', icon: Building2, label: 'مشتریان' },
   { to: '/admin/kanban', icon: KanbanSquare, label: 'کانبان سفارش' },
 ]

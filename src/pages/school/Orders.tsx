@@ -15,12 +15,14 @@ export default function Orders() {
   const [filter, setFilter] = useState('')
 
   useEffect(() => {
-    if (!profile?.school_id) { setLoading(false); return }
-    supabase.from('orders').select('*').eq('school_id', profile.school_id).order('created_at', { ascending: false }).then(({ data }) => {
+    if (!profile?.id) { setLoading(false); return }
+    let query = supabase.from('orders').select('*')
+    query = profile.school_id ? query.eq('school_id', profile.school_id) : query.eq('user_id', profile.id)
+    query.order('created_at', { ascending: false }).then(({ data }) => {
       setOrders(data as Order[] ?? [])
       setLoading(false)
     })
-  }, [profile])
+  }, [profile?.id, profile?.school_id])
 
   const filtered = filter ? orders.filter((o) => o.status === filter) : orders
 

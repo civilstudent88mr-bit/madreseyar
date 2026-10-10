@@ -174,8 +174,11 @@ export interface Payment {
   amount: number
   method: string | null
   receipt_url: string | null
+  reference_code?: string | null
   status: 'pending_receipt' | 'confirmed' | 'rejected'
   note: string | null
+  reviewed_by?: string | null
+  reviewed_at?: string | null
   created_at: string
 }
 

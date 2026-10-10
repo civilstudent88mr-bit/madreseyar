@@ -8,6 +8,7 @@ import type { Order, OrderItem, OrderStatusHistory } from '../../lib/types'
 import { formatToman, formatTomanShort } from '../../lib/format'
 import { formatJalaliDateTime } from '../../lib/jalali'
 import { StatusChip, statusLabels } from '../../lib/ui'
+import PaymentReceiptUpload from '../../components/PaymentReceiptUpload'
 
 export default function OrderDetail() {
   const { id } = useParams()
@@ -128,6 +129,8 @@ export default function OrderDetail() {
             <p className="text-sm text-gray-600">{order.payment_method === 'card_to_card' ? 'کارت به کارت' : order.payment_method === 'cash_on_delivery' ? 'پرداخت در محل' : order.payment_method === 'school_credit' ? 'اعتبار حساب' : '—'}</p>
             <p className="text-sm"><span className="text-gray-500">وضعیت: </span><span className={order.payment_status === 'paid' ? 'text-success-600 font-bold' : 'text-warning-600'}>{order.payment_status === 'paid' ? 'پرداخت شده' : order.payment_status === 'pending_receipt' ? 'در انتظار فیش' : 'پرداخت نشده'}</span></p>
           </div>
+
+          {order.payment_method === 'card_to_card' && <PaymentReceiptUpload orderId={order.id} amount={order.grand_total} />}
 
           {order.status === 'submitted' && (
             <button onClick={cancel} className="btn-danger w-full no-print"><X className="w-4 h-4" /> درخواست لغو</button>

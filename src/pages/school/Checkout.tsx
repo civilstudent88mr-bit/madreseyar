@@ -7,6 +7,7 @@ import { useToast } from '../../lib/toast'
 import { supabase } from '../../lib/supabase'
 import { formatToman, formatTomanShort, savedAmount } from '../../lib/format'
 import { todayJalaliShort } from '../../lib/jalali'
+import PaymentReceiptUpload from '../../components/PaymentReceiptUpload'
 
 export default function Checkout() {
   const { lines, clear } = useCart()
@@ -16,6 +17,7 @@ export default function Checkout() {
   const [step, setStep] = useState(1)
   const [submitting, setSubmitting] = useState(false)
   const [orderId, setOrderId] = useState<string | null>(null)
+  const [bankDetails, setBankDetails] = useState({ bank_name: '', bank_card: '', sheba: '', account_holder: '', payment_instructions: '' })
   const [form, setForm] = useState({
     deliveryAddress: school?.address ?? '',
     receiverName: profile?.full_name ?? '',
@@ -34,6 +36,14 @@ export default function Checkout() {
     }))
   }, [profile?.full_name, profile?.mobile, school?.address])
 
+  useEffect(() => {
+    void supabase.from('settings').select('key,value').in('key', ['bank_name', 'bank_card', 'sheba', 'account_holder', 'payment_instructions']).then(({ data }) => {
+      const next = { bank_name: '', bank_card: '', sheba: '', account_holder: '', payment_instructions: '' }
+      for (const row of data ?? []) if (row.key in next) next[row.key as keyof typeof next] = row.value ?? ''
+      setBankDetails(next)
+    })
+  }, [])
+
   const subtotal = lines.reduce((s, l) => s + (l.product?.our_price ?? l.bundle?.our_total ?? 0) * l.qty, 0)
   const marketTotal = lines.reduce((s, l) => s + (l.product?.market_price ?? l.bundle?.market_total ?? 0) * l.qty, 0)
   const saved = savedAmount(marketTotal, subtotal)
@@ -41,14 +51,14 @@ export default function Checkout() {
   const grandTotal = subtotal + shippingFee
 
   const submit = async () => {
-    if (!profile?.school_id) { toast('error', 'اطلاعات حساب شما مشخص نیست'); return }
+    if (!profile) { toast('error', 'ابتدا وارد حساب کاربری شوید.'); return }
+    if (!form.deliveryAddress.trim() || !form.receiverName.trim() || !form.receiverMobile.trim()) { toast('error', 'نام گیرنده، شماره تماس و نشانی تحویل را کامل کنید.'); return }
     setSubmitting(true)
-    const normalizedMobile = form.receiverMobile.replace(/[۰-۹]/g, (digit) => String('۰۱۲۳۴۵۶۷۸۹'.indexOf(digit))).replace(/[٠-٩]/g, (digit) => String('٠١٢٣٤٥٦٧٨٩'.indexOf(digit))).replace(/[\s-]/g, '')
-    const [profileUpdate, addressUpdate] = await Promise.all([
-      supabase.from('profiles').update({ full_name: form.receiverName.trim(), mobile: normalizedMobile }).eq('id', profile.id),
-      supabase.from('schools').update({ principal_name: form.receiverName.trim(), name: form.receiverName.trim(), address: form.deliveryAddress.trim() }).eq('id', profile.school_id),
-    ])
-    if (profileUpdate.error || addressUpdate.error) {
+    const { error: profileUpdateError } = await supabase.from('profiles').update({ full_name: form.receiverName.trim(), mobile: normalizeMobile(form.receiverMobile) }).eq('id', profile.id)
+    const addressUpdateError = profile.school_id
+      ? (await supabase.from('schools').update({ principal_name: form.receiverName.trim(), name: form.receiverName.trim(), address: form.deliveryAddress.trim() }).eq('id', profile.school_id)).error
+      : null
+    if (profileUpdateError || addressUpdateError) {
       setSubmitting(false)
       toast('error', 'ذخیره اطلاعات گیرنده و نشانی انجام نشد؛ لطفاً دوباره تلاش کنید')
       return
@@ -109,6 +119,7 @@ export default function Checkout() {
           <p className="text-sm text-gray-500">شماره سفارش</p>
           <p className="text-xl font-extrabold text-primary-700" dir="ltr">{orderId.slice(0, 8).toUpperCase()}</p>
         </div>
+        {form.paymentMethod === 'card_to_card' && <div className="mb-6 text-right"><PaymentReceiptUpload orderId={orderId} amount={grandTotal} /></div>}
         <div className="flex gap-2 justify-center">
           <button onClick={() => navigate('/app/orders')} className="btn-primary">مشاهده سفارش‌ها</button>
           <button onClick={() => navigate('/app/catalog')} className="btn-ghost">ادامه خرید</button>
@@ -207,11 +218,13 @@ export default function Checkout() {
               </div>
               {form.paymentMethod === 'card_to_card' && (
                 <div className="bg-accent-50 border border-accent-200 rounded-xl p-4 text-sm">
-                  <p className="font-bold text-accent-800 mb-1">اطلاعات کارت</p>
-                  <p className="text-accent-700">شماره کارت: ۶۰۳۷-۹۹۱۱-۲۳۴۵-۶۷۸۹</p>
-                  <p className="text-accent-700">شماره شبا: IR120170000000001234567890</p>
-                  <p className="text-accent-700">به نام: فروشگاه Healthcare</p>
-                  <p className="text-xs text-accent-600 mt-2">پس از واریز، فیش را در صفحه سفارش بارگذاری کنید.</p>
+                  <p className="font-bold text-accent-800 mb-1">اطلاعات حساب دریافت وجه</p>
+                  {bankDetails.bank_name && <p className="text-accent-700">بانک: {bankDetails.bank_name}</p>}
+                  <p className="text-accent-700">شماره کارت: <span dir="ltr">{bankDetails.bank_card || 'هنوز توسط فروشگاه ثبت نشده است'}</span></p>
+                  {bankDetails.sheba && <p className="text-accent-700">شماره شبا: <span dir="ltr">{bankDetails.sheba}</span></p>}
+                  {bankDetails.account_holder && <p className="text-accent-700">به نام: {bankDetails.account_holder}</p>}
+                  {bankDetails.payment_instructions && <p className="text-xs text-accent-600 mt-2">{bankDetails.payment_instructions}</p>}
+                  <p className="text-xs text-accent-600 mt-2">پس از ثبت سفارش، رسید واریز را در همان صفحه بارگذاری کنید.</p>
                 </div>
               )}
               <div className="flex gap-2">
